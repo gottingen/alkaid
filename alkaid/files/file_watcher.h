@@ -1,0 +1,99 @@
+//
+// Copyright (C) 2024 EA group inc.
+// Author: Jeff.li lijippy@163.com
+// All rights reserved.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+
+#pragma once
+
+#include <cstdint>                                 // int64_t
+#include <string>                                   // std::string
+#include <collie/utility/status.h>
+
+namespace alkaid {
+
+    /**
+     * @ingroup alkaid_files_monitor
+     * @brief FileWatcher is a class to watch file changes. eg
+     *        file creation, file modification, file deletion.
+     *        Example:
+     *        @code {.cpp}
+     *        FileWatcher fw;
+     *        fw.init("to_be_watched_file");
+     *        ....
+     *        if (fw.check_and_consume() > 0) {
+     *          // the file is created or updated
+     *          ......
+     *        }
+     *       @endcode
+     */
+    class FileWatcher {
+    public:
+        enum Change {
+            DELETED = -1,
+            UNCHANGED = 0,
+            UPDATED = 1,
+            CREATED = 2,
+        };
+
+        typedef int64_t Timestamp;
+
+        FileWatcher();
+
+        /**
+         * @brief Watch file at `file_path', must be called before calling other methods.
+         * @param file_path
+         * @return return ok_status() if success, otherwise return error status.
+         */
+        collie::Status init(const char *file_path);
+
+
+        /**
+         * @brief Watch file at `file_path', must be called before calling other methods.
+         * @param file_path
+         * @return
+         */
+        collie::Status init_from_not_exist(const char *file_path);
+
+        /**
+         * @brief Check and consume change of the watched file. Write `last_timestamp'
+         *        if it's not nullptr.
+         * @param [out] last_timestamp the last timestamp of the file.
+         * @return
+         *        CREATE    the file is created since last call to this method.
+         *        UPDATED   the file is modified since last call.
+         *        UNCHANGED the file has no change since last call.
+         *        DELETED   the file was deleted since last call.
+         *@note If the file is updated too frequently, this method may return
+         *      UNCHANGED due to precision of stat(2) and the file system. If the file
+         *      is created and deleted too frequently, the event may not be detected.
+         */
+
+        Change check_and_consume(Timestamp *last_timestamp = nullptr);
+
+        // Set internal timestamp. User can use this method to make
+        // check_and_consume() replay the change.
+        void restore(Timestamp timestamp);
+
+        // Get path of watched file
+        const char *filepath() const { return _file_path.c_str(); }
+
+    private:
+        Change check(Timestamp *new_timestamp) const;
+
+        std::string _file_path;
+        Timestamp _last_ts;
+    };
+}  // namespace alkaid
