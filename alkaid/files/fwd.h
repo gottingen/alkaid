@@ -22,6 +22,11 @@
 #include <collie/utility/result.h>
 #include <collie/filesystem/fs.h>
 
+#define INVALID_FD_RETURN(fd) \
+    if ((fd) == INVALID_FILE_HANDLER) { \
+        return ::collie::Status::io_error("file not open for read yet"); \
+    }
+
 namespace alkaid {
 
 #if defined(__linux__)  || defined(__APPLE__)
@@ -256,8 +261,3 @@ namespace alkaid {
         virtual void close() = 0;
     };
 }  // namespace alkaid
-
-#define INVALID_FD_RETURN(fd) \
-    if ((fd) == INVALID_FILE_HANDLER) { \
-        return ::collie::Status::io_error("file not open for read yet"); \
-    }
