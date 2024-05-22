@@ -80,7 +80,7 @@ namespace alkaid {
          */
         void close() override;
 
-        size_t position() const override;
+        size_t position() const override { return _position; }
 
         /**
          * @brief get file path.
