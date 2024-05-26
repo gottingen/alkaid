@@ -16,6 +16,9 @@
 ############################################################
 # system pthread and rt, dl
 ############################################################
+
+list(APPEND CMAKE_PREFIX_PATH "/opt/EA/inf")
+
 set(CARBIN_SYSTEM_DYLINK)
 if (APPLE)
     find_library(CoreFoundation CoreFoundation)
@@ -35,7 +38,6 @@ if (CARBIN_BUILD_BENCHMARK)
     #include(require_benchmark)
 endif ()
 
-list(APPEND CMAKE_PREFIX_PATH "/opt/EA/inf")
 find_package(Threads REQUIRED)
 find_package(collie REQUIRED)
 include_directories(${collie_INCLUDE_DIR})

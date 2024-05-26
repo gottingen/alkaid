@@ -37,7 +37,7 @@ option(CARBIN_BUILD_TEST "enable project test or not" OFF)
 
 option(CARBIN_BUILD_BENCHMARK "enable project benchmark or not" OFF)
 
-option(CARBIN_BUILD_EXAMPLES "enable project examples or not" ON)
+option(CARBIN_BUILD_EXAMPLES "enable project examples or not" OFF)
 
 option(CARBIN_DEPS_ENABLE " " ON)
 
@@ -47,7 +47,7 @@ option(CARBIN_ENABLE_CUDA "" OFF)
 
 option(CARBIN_STATUS_PRINT "carbin print or not, default on" ON)
 
-option(CARBIN_INSTALL_LIB "avoid centos install to lib64" ON)
+option(CARBIN_INSTALL_LIB "avoid centos install to lib64" OFF)
 option(WITH_DEBUG_SYMBOLS "With debug symbols" ON)
 
 ################################################################################################
@@ -742,7 +742,7 @@ function(carbin_cc_object)
     endif ()
 
     if ("${CARBIN_CC_OBJECT_SOURCES}" STREQUAL "")
-        carbin_error("no source give to the lib ${CARBIN_CC_OBJECT_NAME}, using carbin_cc_object instead")
+        carbin_error("no source give to the library ${CARBIN_CC_OBJECT_NAME}, using carbin_cc_object instead")
     endif ()
 
     carbin_raw("-----------------------------------")
@@ -1461,13 +1461,13 @@ endif ()
 if (CONDA_ENV_ENABLE)
     list(APPEND CMAKE_PREFIX_PATH $ENV{CONDA_PREFIX})
     include_directories($ENV{CONDA_PREFIX}/include)
-    link_directories($ENV{CONDA_PREFIX}/lib)
+    link_directories($ENV{CONDA_PREFIX}/${CMAKE_INSTALL_LIBDIR})
 endif ()
 
 if (CARBIN_DEPS_ENABLE)
     list(APPEND CMAKE_PREFIX_PATH ${CARBIN_DEPS_PREFIX})
     include_directories(${CARBIN_DEPS_PREFIX}/include)
-    link_directories(${CARBIN_DEPS_PREFIX}/lib)
+    link_directories(${CARBIN_DEPS_PREFIX}/${CMAKE_INSTALL_LIBDIR})
 endif ()
 
 if (CARBIN_INSTALL_LIB)

@@ -37,7 +37,7 @@ outputs:
         - sysroot_linux-64 =2.17  # [linux64]
     test:
       commands:
-        - test -f $PREFIX/lib/libchangme.so              # [linux]
-        - test -f $PREFIX/lib/libchangme.dylib           # [osx]
+        - test -f $PREFIX/@CMAKE_INSTALL_LIBDIR@/libchangme.so              # [linux]
+        - test -f $PREFIX/@CMAKE_INSTALL_LIBDIR@/libchangme.dylib           # [osx]
       #  - conda inspect linkages -p $PREFIX $PKG_NAME  # [not win]
       #  - conda inspect objects -p $PREFIX $PKG_NAME   # [osx]

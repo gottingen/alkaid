@@ -29,10 +29,10 @@ if (not_top)
 endif ()
 message(STATUS ${PROJECT_NAME}_IS_TOP_PROJECT)
 
-set(PROJECT_DESCRIPTION "Hercules is an ahead of time compiler for a subset of the Python language framework.")
+set(PROJECT_DESCRIPTION "alkaid is a c++ library for filesystem and high performance io")
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 1)
-set(PROJECT_VERSION_PATCH 2)
+set(PROJECT_VERSION_PATCH 3)
 set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
 set(${PROJECT_NAME}_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
@@ -71,6 +71,8 @@ include(alkaid_deps)
 include(alkaid_cxx_config)
 include(alkaid_test)
 
+configure_file(${PROJECT_SOURCE_DIR}/conda/meta.yaml.in ${PROJECT_SOURCE_DIR}/conda/meta.yaml @ONLY)
+
 add_subdirectory(alkaid)
 ####################################################################
 # belows are auto, edit it be cation
@@ -95,11 +97,12 @@ install(DIRECTORY ${PROJECT_NAME}
         FILES_MATCHING
         PATTERN "*.inc"
         PATTERN "*.h"
+        PATTERN "*.hpp"
         )
 
 # Layout. This works for all platforms:
-#   * <prefix>/lib*/cmake/<PROJECT-NAME>
-#   * <prefix>/lib*/
+#   * <prefix>/@CMAKE_INSTALL_LIBDIR@/cmake/<PROJECT-NAME>
+#   * <prefix>/@CMAKE_INSTALL_LIBDIR@*/
 #   * <prefix>/include/
 set(config_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 
@@ -132,15 +135,15 @@ configure_package_config_file(
 )
 
 #Targets:
-#  * <prefix>/lib/libbar.a
-#  * <prefix>/lib/libbaz.a
+#  * <prefix>/${CMAKE_INSTALL_LIBDIR}/libbar.a
+#  * <prefix>/${CMAKE_INSTALL_LIBDIR}/libbaz.a
 #  * header location after install: <prefix>/include/foo/Bar.hpp
 #  * headers can be included by C++ code `#include <foo/Bar.hpp>`
 
 
 # Config
-#   * <prefix>/lib/cmake/Foo/FooConfig.cmake
-#   * <prefix>/lib/cmake/Foo/FooConfigVersion.cmake
+#   * <prefix>/${CMAKE_INSTALL_LIBDIR}/cmake/Foo/FooConfig.cmake
+#   * <prefix>/${CMAKE_INSTALL_LIBDIR}/cmake/Foo/FooConfigVersion.cmake
 install(
         FILES
         "${project_config}" "${version_config}"
@@ -149,7 +152,7 @@ install(
 )
 
 # Config
-#   * <prefix>/lib/cmake/Foo/FooTargets.cmake
+#   * <prefix>/${CMAKE_INSTALL_LIBDIR}/cmake/Foo/FooTargets.cmake
 
 install(
         EXPORT
@@ -162,5 +165,5 @@ install(
 configure_file(${PROJECT_SOURCE_DIR}/carbin_cmake/package/pkg_dump_template.pc.in
         ${PROJECT_BINARY_DIR}/package/${PROJECT_NAME}.pc)
 
-install(FILES ${PROJECT_BINARY_DIR}/package/${PROJECT_NAME}.pc DESTINATION lib/pkgconfig)
+install(FILES ${PROJECT_BINARY_DIR}/package/${PROJECT_NAME}.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 include(alkaid_cpack_config)
