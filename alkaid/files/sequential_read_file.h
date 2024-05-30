@@ -40,7 +40,7 @@ namespace alkaid {
          * @param path file path
          * @param option file option
          */
-        [[nodiscard]] collie::Status open(const collie::filesystem::path &path, const OpenOption &option = kDefaultReadOption) noexcept override;
+        [[nodiscard]] turbo::Status open(const ghc::filesystem::path &path, const OpenOption &option = kDefaultReadOption) noexcept override;
 
         /**
          * @brief read file content sequentially from the current position to the specified length.
@@ -49,7 +49,7 @@ namespace alkaid {
          *          size, the file content will be read from the current position to the end of the file.
          * @return the length of the file content read and the status of the operation.
          */
-        [[nodiscard]] collie::Result<size_t> read(std::string *content, size_t n = kInfiniteFileSize) override;
+        [[nodiscard]] turbo::Result<size_t> read(std::string *content, size_t n = kInfiniteFileSize) override;
 
         /**
          * @brief read file content sequentially from the current position to the specified length.
@@ -59,7 +59,7 @@ namespace alkaid {
          *        If the length is less than the file size, the file content will be read from the current position to the length.
          * @return the length of the file content read and the status of the operation.
          */
-        [[nodiscard]] collie::Result<size_t> read(void *buff, size_t len) override;
+        [[nodiscard]] turbo::Result<size_t> read(void *buff, size_t len) override;
 
         /**
          * @brief skip file descriptor sequentially from the current position to the position specified by offset.
@@ -67,13 +67,13 @@ namespace alkaid {
          * @param n [input] skip length, if n + current position is greater than the file size, the current position will be set to the end of the file.
          * @return the status of the operation.
          */
-        [[nodiscard]] collie::Status skip(off_t n) override;
+        [[nodiscard]] turbo::Status skip(off_t n) override;
 
         /**
          * @brief if the current position is the end of the file, return true, otherwise return false.
          * @return the status of the operation.
          */
-        collie::Result<bool> is_eof() const override;
+        turbo::Result<bool> is_eof() const override;
 
         /**
          * @brief close file.
@@ -86,11 +86,11 @@ namespace alkaid {
          * @brief get file path.
          * @return file path.
          */
-        [[nodiscard]] const collie::filesystem::path &path() const { return _file_path; }
+        [[nodiscard]] const ghc::filesystem::path &path() const { return _file_path; }
 
     private:
         FILE_HANDLER _fd{INVALID_FILE_HANDLER};
-        collie::filesystem::path _file_path;
+        ghc::filesystem::path _file_path;
         OpenOption _option;
         FileEventListener _listener;
         size_t _position{0};

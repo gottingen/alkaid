@@ -23,6 +23,8 @@
 
 #include <alkaid/files/internal/sys_io.h>
 #include <alkaid/files/random_write_file.h>
+#include <turbo/times/time.h>
+#include <turbo/strings/substitute.h>
 #include <cstdio>
 #include <fcntl.h>
 #include <unistd.h>
@@ -38,13 +40,13 @@ namespace alkaid {
     }
 
 
-    collie::Status
-    RandomWriteFile::open(const collie::filesystem::path &fname, const OpenOption &option) noexcept {
+    turbo::Status
+    RandomWriteFile::open(const ghc::filesystem::path &fname, const OpenOption &option) noexcept {
         close();
         _option = option;
         _file_path = fname;
-        if(_file_path.empty()) {
-            return collie::Status::invalid_argument("file path is empty");
+        if (_file_path.empty()) {
+            return turbo::invalid_argument_error("file path is empty");
         }
 
         if (_listener.before_open) {
@@ -56,11 +58,11 @@ namespace alkaid {
                 auto pdir = _file_path.parent_path();
                 if (!pdir.empty()) {
                     std::error_code ec;
-                    if (!collie::filesystem::exists(pdir, ec)) {
+                    if (!ghc::filesystem::exists(pdir, ec)) {
                         if (ec) {
                             continue;
                         }
-                        if (!collie::filesystem::create_directories(pdir, ec)) {
+                        if (!ghc::filesystem::create_directories(pdir, ec)) {
                             continue;
                         }
                     }
@@ -68,23 +70,23 @@ namespace alkaid {
             }
             auto rs = open_file(_file_path, _option);
             if (rs.ok()) {
-                _fd = rs.value_or_die();
+                _fd = rs.value();
                 if (_listener.after_open) {
                     _listener.after_open(_file_path, _fd);
                 }
-                return collie::Status::ok_status();
+                return turbo::OkStatus();
             }
             if (_option.open_interval_ms > 0) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(_option.open_interval_ms));
+                turbo::sleep_for(turbo::Duration::milliseconds(_option.open_interval_ms));
             }
         }
-        return collie::Status::from_errno(errno, "Failed opening file {} for writing", _file_path.c_str());
+        return turbo::ErrnoToStatus(errno, "Failed opening file {} for writing");
     }
 
-    collie::Status RandomWriteFile::reopen(bool truncate) {
+    turbo::Status RandomWriteFile::reopen(bool truncate) {
         close();
         if (_file_path.empty()) {
-            return collie::Status::invalid_argument("file path is empty");
+            return turbo::invalid_argument_error("file path is empty");
         }
         OpenOption option = _option;
         if (truncate) {
@@ -93,36 +95,37 @@ namespace alkaid {
         return open(_file_path, option);
     }
 
-    collie::Status RandomWriteFile::write(off_t offset, const void *data, size_t size, bool truncate) {
+    turbo::Status RandomWriteFile::write(off_t offset, const void *data, size_t size, bool truncate) {
         INVALID_FD_RETURN(_fd);
 
         ssize_t write_size = ::pwrite(_fd, data, size, static_cast<off_t>(offset));
         if (write_size < 0) {
-            return collie::Status::from_errno(errno, _file_path.c_str());
+            return turbo::ErrnoToStatus(errno, _file_path.c_str());
         }
         if (truncate) {
             if (::ftruncate(_fd, static_cast<off_t>(offset + size)) != 0) {
-                return collie::Status::from_errno(errno, "Failed truncate file {} for size:{} ", _file_path.c_str(),
-                                                  static_cast<off_t>(offset + size));
+                return turbo::ErrnoToStatus(errno, turbo::substitute("Failed truncate file $0 for size:$1 ",
+                                                                     _file_path.c_str(),
+                                                                     static_cast<off_t>(offset + size)));
             }
         }
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 
-    collie::Status RandomWriteFile::truncate(size_t size) {
+    turbo::Status RandomWriteFile::truncate(size_t size) {
         if (::ftruncate(_fd, static_cast<off_t>(size)) != 0) {
-            return collie::Status::from_errno(errno,
-                                              "Failed truncate file {} for size:{} ", _file_path.c_str(),
-                                              static_cast<off_t>(size));
+            return turbo::ErrnoToStatus(errno,
+                                        turbo::substitute("Failed truncate file $0 for size:$1 ", _file_path.c_str(),
+                                                          static_cast<off_t>(size)));
         }
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 
-    collie::Result<size_t> RandomWriteFile::size() const {
+    turbo::Result<size_t> RandomWriteFile::size() const {
         INVALID_FD_RETURN(_fd);
         auto rs = file_size(_fd);
-        if(rs == -1) {
-            return collie::Status::from_errno(errno, "get file size failed");
+        if (rs == -1) {
+            return turbo::ErrnoToStatus(errno, "get file size failed");
         }
         return rs;
     }
@@ -142,16 +145,15 @@ namespace alkaid {
         }
     }
 
-    collie::Status RandomWriteFile::flush() {
+    turbo::Status RandomWriteFile::flush() {
         INVALID_FD_RETURN(_fd);
         if (::fdatasync(_fd) != 0) {
-            return collie::Status::from_errno(errno,
-                                              "Failed flush to file {}", _file_path.c_str());
+            return turbo::ErrnoToStatus(errno, turbo::substitute("Failed flush to file $0", _file_path.c_str()));
         }
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 
-    const collie::filesystem::path &RandomWriteFile::file_path() const {
+    const ghc::filesystem::path &RandomWriteFile::file_path() const {
         return _file_path;
     }
 

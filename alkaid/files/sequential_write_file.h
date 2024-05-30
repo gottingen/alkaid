@@ -77,7 +77,7 @@ namespace alkaid {
          * @return the status of the operation.
          */
 
-        [[nodiscard]] collie::Status open(const collie::filesystem::path &fname, const OpenOption &option) noexcept override;
+        [[nodiscard]] turbo::Status open(const ghc::filesystem::path &fname, const OpenOption &option) noexcept override;
 
         /**
          * @brief reopen file with path and option specified by user.
@@ -89,7 +89,7 @@ namespace alkaid {
          * @param truncate if true, the file will be truncated.
          * @return the status of the operation.
          */
-        [[nodiscard]] collie::Status reopen(bool truncate = false);
+        [[nodiscard]] turbo::Status reopen(bool truncate = false);
 
         /**
          * @brief write file content to the end of the file.
@@ -97,14 +97,14 @@ namespace alkaid {
          * @param size [input] write length.
          * @return the status of the operation.
          */
-        [[nodiscard]] collie::Status write(const void *buff, size_t size) override;
+        [[nodiscard]] turbo::Status write(const void *buff, size_t size) override;
 
         /**
          * @brief write file content to the end of the file.
          * @param str [input] file content, can not be empty.
          * @return the status of the operation.
          */
-        [[nodiscard]] collie::Status write(std::string_view str) override {
+        [[nodiscard]] turbo::Status write(std::string_view str) override {
             return write(str.data(), str.size());
         }
 
@@ -113,13 +113,13 @@ namespace alkaid {
          * @param size [input] file length.
          * @return the status of the operation.
          */
-        [[nodiscard]] collie::Status truncate(size_t size) override;
+        [[nodiscard]] turbo::Status truncate(size_t size) override;
 
         /**
          * @brief get file size.
          * @return the file size and the status of the operation.
          */
-        [[nodiscard]] collie::Result<size_t> size() const override;
+        [[nodiscard]] turbo::Result<size_t> size() const override;
 
         /**
          * @brief close file.
@@ -130,18 +130,18 @@ namespace alkaid {
          * @brief flush file.
          */
         [[nodiscard]]
-        collie::Status flush() override;
+        turbo::Status flush() override;
 
         /**
          * @brief get file path.
          * @return file path.
          */
-        [[nodiscard]] const collie::filesystem::path &file_path() const;
+        [[nodiscard]] const ghc::filesystem::path &file_path() const;
 
     private:
         static const size_t npos = std::numeric_limits<size_t>::max();
         FILE_HANDLER  _fd{INVALID_FILE_HANDLER};
-        collie::filesystem::path _file_path;
+        ghc::filesystem::path _file_path;
         OpenOption _option;
         FileEventListener _listener;
     };

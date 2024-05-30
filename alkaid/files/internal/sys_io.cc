@@ -19,8 +19,8 @@
 
 #include <alkaid/files/internal/sys_io.h>
 #include <alkaid/files/fd_guard.h>
-#include <collie/port/port.h>
-#include <collie/log/logging.h>
+#include <turbo/log/logging.h>
+#include <turbo/strings/substitute.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -64,7 +64,7 @@ namespace alkaid::system_internal {
     }
 
 
-#if defined(COLLIE_PROCESSOR_X86_64)
+#if defined(__x86_64__)
 
 #ifndef SYS_preadv
 #define SYS_preadv 295
@@ -91,14 +91,14 @@ namespace alkaid::system_internal {
 #endif
         FDGuard fd(::open("/dev/zero", O_RDONLY));
         if (fd < 0) {
-            LOG(WARN) << "Fail to open /dev/zero";
+            LOG(WARNING) << "Fail to open /dev/zero";
             return user_preadv;
         }
         char dummy[1];
         iovec vec = {dummy, sizeof(dummy)};
         const int rc = syscall(SYS_preadv, (int) fd, &vec, 1, 0);
         if (rc < 0) {
-            LOG(WARN)<< "The kernel doesn't support SYS_preadv, use user_preadv instead";
+            LOG(WARNING)<< "The kernel doesn't support SYS_preadv, use user_preadv instead";
             return user_preadv;
         }
         return sys_preadv;
@@ -107,23 +107,23 @@ namespace alkaid::system_internal {
     inline iov_function get_pwritev_func() {
         FDGuard fd(::open("/dev/null", O_WRONLY));
         if (fd < 0) {
-            LOG(WARN) << "Fail to open /dev/zero";
+            LOG(WARNING) << "Fail to open /dev/zero";
             return user_pwritev;
         }
-#if defined(COLLIE_PLATFORM_OSX)
+#if defined(__apple__)
         return user_pwritev;
 #endif
         char dummy[1];
         iovec vec = {dummy, sizeof(dummy)};
         const int rc = syscall(SYS_pwritev, (int) fd, &vec, 1, 0);
         if (rc < 0) {
-            LOG(WARN)<< "The kernel doesn't support SYS_preadv, use user_preadv instead";
+            LOG(WARNING)<< "The kernel doesn't support SYS_preadv, use user_preadv instead";
             return user_pwritev;
         }
         return sys_pwritev;
     }
 
-#else   // COLLIE_PROCESSOR_X86_64
+#else   //
 
 #warning "We don't check if the kernel supports SYS_preadv or SYS_pwritev on non-X86_64, use implementation on pread/pwrite directly."
 
@@ -180,19 +180,19 @@ namespace alkaid {
         return sys_readv(fd, &iov, 1);
     }
 
-    collie::Result<FILE_HANDLER> open_file(const std::string &filename, const OpenOption &option) {
+    turbo::Result<FILE_HANDLER> open_file(const std::string &filename, const OpenOption &option) {
         const FILE_HANDLER fd = ::open((filename.c_str()), option.flags, option.mode);
         if (fd == -1) {
-            return collie::Status::from_errno(errno, "Failed opening file {} for reading", filename.c_str());
+            return turbo::ErrnoToStatus(errno, turbo::substitute("Failed opening file $0 for reading", filename.c_str()));
         }
         return fd;
     }
 
-    collie::Result<FILE_HANDLER> open_file_read(const std::string &filename) {
+    turbo::Result<FILE_HANDLER> open_file_read(const std::string &filename) {
         return open_file(filename, kDefaultReadOption);
     }
 
-    collie::Result<FILE_HANDLER> open_file_write(const std::string &filename, bool truncate) {
+    turbo::Result<FILE_HANDLER> open_file_write(const std::string &filename, bool truncate) {
         if (truncate) {
             return open_file(filename, kDefaultTruncateWriteOption);
         }
@@ -201,7 +201,7 @@ namespace alkaid {
 
 }
 
-#if defined(COLLIE_PLATFORM_LINUX)
+#if defined(__linux__)
 namespace alkaid {
     ssize_t file_size(int fd) {
         if (fd == -1) {
@@ -224,7 +224,7 @@ namespace alkaid {
 }  // namespace alkaid
 #endif  // COLLIE_PLATFORM_LINUX
 
-#if defined(COLLIE_PLATFORM_WINDOWS)
+#if defined(_WIN32) || defined(_WIN64)
 
 namespace alkaid {
         ssize_t file_size(int fd) {

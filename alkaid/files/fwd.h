@@ -19,12 +19,12 @@
 
 #pragma once
 
-#include <collie/utility/result.h>
-#include <collie/filesystem/fs.h>
+#include <turbo/status/result.h>
+#include <alkaid/ghc/filesystem.hpp>
 
 #define INVALID_FD_RETURN(fd) \
     if ((fd) == INVALID_FILE_HANDLER) { \
-        return ::collie::Status::io_error("file not open for read yet"); \
+        return ::turbo::invalid_argument_error("file not open for read yet"); \
     }
 
 namespace alkaid {
@@ -121,10 +121,10 @@ namespace alkaid {
         FileEventListener()
                 : before_open(nullptr), after_open(nullptr), before_close(nullptr), after_close(nullptr) {}
 
-        std::function<void(const collie::filesystem::path &filename)> before_open;
-        std::function<void(const collie::filesystem::path &filename, FILE_HANDLER handler)> after_open;
-        std::function<void(const collie::filesystem::path &filename, FILE_HANDLER file_stream)> before_close;
-        std::function<void(const collie::filesystem::path &filename)> after_close;
+        std::function<void(const ghc::filesystem::path &filename)> before_open;
+        std::function<void(const ghc::filesystem::path &filename, FILE_HANDLER handler)> after_open;
+        std::function<void(const ghc::filesystem::path &filename, FILE_HANDLER file_stream)> before_close;
+        std::function<void(const ghc::filesystem::path &filename)> after_close;
     };
 
     static constexpr size_t kInfiniteFileSize = std::numeric_limits<size_t>::max();
@@ -134,21 +134,21 @@ namespace alkaid {
 
         virtual  ~SequentialFileReader()   = default;
 
-        [[nodiscard]] virtual collie::Status open(const collie::filesystem::path &path, const OpenOption &option = kDefaultReadOption) noexcept = 0;
+        [[nodiscard]] virtual turbo::Status open(const ghc::filesystem::path &path, const OpenOption &option = kDefaultReadOption) noexcept = 0;
 
-        [[nodiscard]] virtual collie::Status skip(off_t n) = 0;
+        [[nodiscard]] virtual turbo::Status skip(off_t n) = 0;
 
-        [[nodiscard]] virtual collie::Result<size_t> read(void *buff, size_t len) = 0;
+        [[nodiscard]] virtual turbo::Result<size_t> read(void *buff, size_t len) = 0;
 
-        [[nodiscard]] virtual collie::Result<size_t> read(std::string *result, size_t len = kInfiniteFileSize) {
-            return collie::Status::unimplemented("SequentialFileReader::read(std::string *result, size_t len)");
+        [[nodiscard]] virtual turbo::Result<size_t> read(std::string *result, size_t len = kInfiniteFileSize) {
+            return turbo::unimplemented_error("SequentialFileReader::read(std::string *result, size_t len)");
         }
 
         virtual void close() = 0;
 
         virtual size_t position() const = 0;
 
-        [[nodiscard]] virtual collie::Result<bool> is_eof() const = 0;
+        [[nodiscard]] virtual turbo::Result<bool> is_eof() const = 0;
 
     };
 
@@ -157,12 +157,12 @@ namespace alkaid {
 
         virtual  ~RandomAccessFileReader()   = default;
 
-        [[nodiscard]] virtual collie::Status open(const collie::filesystem::path &path, const OpenOption &option = kDefaultReadOption) noexcept = 0;
+        [[nodiscard]] virtual turbo::Status open(const ghc::filesystem::path &path, const OpenOption &option = kDefaultReadOption) noexcept = 0;
 
-        [[nodiscard]] virtual collie::Result<size_t> read(off_t offset, void *buff, size_t len) = 0;
+        [[nodiscard]] virtual turbo::Result<size_t> read(off_t offset, void *buff, size_t len) = 0;
 
-        [[nodiscard]] virtual collie::Result<size_t> read(off_t offset, std::string *result, size_t len = kInfiniteFileSize) {
-            return collie::Status::unimplemented("SequentialFileReader::read(std::string *result, size_t len)");
+        [[nodiscard]] virtual turbo::Result<size_t> read(off_t offset, std::string *result, size_t len = kInfiniteFileSize) {
+            return turbo::unimplemented_error("SequentialFileReader::read(std::string *result, size_t len)");
         }
 
         virtual void close() = 0;
@@ -173,25 +173,19 @@ namespace alkaid {
 
         virtual  ~SequentialFileWriter() = default;
 
-        [[nodiscard]] virtual collie::Status open(const collie::filesystem::path &path,const OpenOption &option) noexcept = 0;
+        [[nodiscard]] virtual turbo::Status open(const ghc::filesystem::path &path,const OpenOption &option) noexcept = 0;
 
-        [[nodiscard]] virtual  collie::Status write(const void *buff, size_t len) = 0;
+        [[nodiscard]] virtual  turbo::Status write(const void *buff, size_t len) = 0;
 
-        [[nodiscard]] virtual collie::Status flush() = 0;
+        [[nodiscard]] virtual turbo::Status flush() = 0;
 
-        [[nodiscard]] virtual  collie::Status write(std::string_view buff) {
-            return collie::Status::unimplemented("SequentialFileReader::read(std::string *result, size_t len)");
+        [[nodiscard]] virtual  turbo::Status write(std::string_view buff) {
+            return turbo::unimplemented_error("SequentialFileReader::read(std::string *result, size_t len)");
         }
 
-        [[nodiscard]] virtual collie::Status truncate(size_t size) = 0;
+        [[nodiscard]] virtual turbo::Status truncate(size_t size) = 0;
 
-        template<typename ...Args>
-        [[nodiscard]] collie::Status write_format(off_t offset, const char *fmt, const Args&...args) {
-            std::string_view content = collie::format(fmt, args...);
-            return write(content.data(), content.size());
-        }
-
-        [[nodiscard]] virtual collie::Result<size_t> size() const = 0;
+        [[nodiscard]] virtual turbo::Result<size_t> size() const = 0;
 
         virtual void close() = 0;
 
@@ -202,27 +196,21 @@ namespace alkaid {
 
         virtual ~RandomFileWriter() = default;
 
-        [[nodiscard]] virtual collie::Status open(const collie::filesystem::path &path, const OpenOption &option) noexcept = 0;
+        [[nodiscard]] virtual turbo::Status open(const ghc::filesystem::path &path, const OpenOption &option) noexcept = 0;
 
-        [[nodiscard]] virtual  collie::Status
+        [[nodiscard]] virtual  turbo::Status
         write(off_t offset, const void *buff, size_t len, bool truncate = false) = 0;
 
-        [[nodiscard]] virtual collie::Status flush() = 0;
+        [[nodiscard]] virtual turbo::Status flush() = 0;
 
-        [[nodiscard]] virtual collie::Status
+        [[nodiscard]] virtual turbo::Status
         write(off_t offset, std::string_view buff, bool truncate = false) {
-            return collie::Status::unimplemented("SequentialFileReader::read(std::string *result, size_t len)");
+            return turbo::unimplemented_error("SequentialFileReader::read(std::string *result, size_t len)");
         }
 
-        template<typename ...Args>
-        [[nodiscard]] collie::Status write_format(off_t offset, std::string_view fmt, const Args&...args) {
-            std::string_view content = collie::format(fmt, args...);
-            return write(offset, content.data(), content.size());
-        }
+        [[nodiscard]] virtual turbo::Status truncate(size_t size) = 0;
 
-        [[nodiscard]] virtual collie::Status truncate(size_t size) = 0;
-
-        virtual collie::Result<size_t> size() const = 0;
+        virtual turbo::Result<size_t> size() const = 0;
 
         virtual void close() = 0;
 
@@ -235,28 +223,21 @@ namespace alkaid {
 
         virtual ~TempFileWriter() = default;
 
-        [[nodiscard]] virtual collie::Status open(std::string_view prefix = kDefaultTempFilePrefix, std::string_view ext ="", size_t bits = 6) noexcept = 0;
+        [[nodiscard]] virtual turbo::Status open(std::string_view prefix = kDefaultTempFilePrefix, std::string_view ext ="", size_t bits = 6) noexcept = 0;
 
-        [[nodiscard]] virtual collie::Status write(const void *buff, size_t len) = 0;
+        [[nodiscard]] virtual turbo::Status write(const void *buff, size_t len) = 0;
 
-        [[nodiscard]] virtual collie::Status flush() = 0;
+        [[nodiscard]] virtual turbo::Status flush() = 0;
 
-        [[nodiscard]] virtual collie::Status truncate(size_t size) = 0;
+        [[nodiscard]] virtual turbo::Status truncate(size_t size) = 0;
 
-        [[nodiscard]] virtual collie::Status write(std::string_view buff) {
-            return collie::Status::unimplemented("SequentialFileReader::read(std::string *result, size_t len)");
+        [[nodiscard]] virtual turbo::Status write(std::string_view buff) {
+            return turbo::unimplemented_error("SequentialFileReader::read(std::string *result, size_t len)");
         }
-
-        template<typename ...Args>
-        [[nodiscard]] collie::Status write_format(off_t offset, const char *fmt, const Args&...args) {
-            std::string_view content = collie::format(fmt, args...);
-            return write(content.data(), content.size());
-        }
-
 
         [[nodiscard]] virtual std::string path() const = 0;
 
-        virtual collie::Result<size_t> size() const = 0;
+        virtual turbo::Result<size_t> size() const = 0;
 
         virtual void close() = 0;
     };

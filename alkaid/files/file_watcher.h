@@ -20,7 +20,7 @@
 
 #include <cstdint>                                 // int64_t
 #include <string>                                   // std::string
-#include <collie/utility/status.h>
+#include <turbo/status/status.h>
 
 namespace alkaid {
 
@@ -57,7 +57,7 @@ namespace alkaid {
          * @param file_path
          * @return return ok_status() if success, otherwise return error status.
          */
-        collie::Status init(const char *file_path);
+        turbo::Status init(const char *file_path);
 
 
         /**
@@ -65,7 +65,7 @@ namespace alkaid {
          * @param file_path
          * @return
          */
-        collie::Status init_from_not_exist(const char *file_path);
+        turbo::Status init_from_not_exist(const char *file_path);
 
         /**
          * @brief Check and consume change of the watched file. Write `last_timestamp'

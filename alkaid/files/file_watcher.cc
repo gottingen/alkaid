@@ -27,24 +27,24 @@ namespace alkaid {
     FileWatcher::FileWatcher() : _last_ts(NON_EXIST_TS) {
     }
 
-    collie::Status FileWatcher::init(const char *file_path) {
+    turbo::Status FileWatcher::init(const char *file_path) {
         auto rs = init_from_not_exist(file_path);
         if (!rs.ok()) {
             return rs;
         }
         check_and_consume(nullptr);
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 
-    collie::Status FileWatcher::init_from_not_exist(const char *file_path) {
+    turbo::Status FileWatcher::init_from_not_exist(const char *file_path) {
         if (nullptr == file_path) {
-            return collie::Status::invalid_argument("file_path is nullptr");
+            return turbo::invalid_argument_error("file_path is nullptr");
         }
         if (!_file_path.empty()) {
-            return collie::Status::already_exists("file_path is already set");
+            return turbo::already_exists_error("file_path is already set");
         }
         _file_path = file_path;
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 
     FileWatcher::Change FileWatcher::check(Timestamp *new_timestamp) const {

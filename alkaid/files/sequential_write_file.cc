@@ -21,6 +21,8 @@
 
 #include <alkaid/files/internal/sys_io.h>
 #include <alkaid/files/sequential_write_file.h>
+#include <turbo/times/time.h>
+#include <turbo/strings/substitute.h>
 #include <cstdio>
 #include <fcntl.h>
 #include <unistd.h>
@@ -35,12 +37,12 @@ namespace alkaid {
         close();
     }
 
-    collie::Status SequentialWriteFile::open(const collie::filesystem::path &fname, const OpenOption &option)  noexcept {
+    turbo::Status SequentialWriteFile::open(const ghc::filesystem::path &fname, const OpenOption &option)  noexcept {
         close();
         _option = option;
         _file_path = fname;
         if(_file_path.empty()) {
-            return collie::Status::invalid_argument("file path is empty");
+            return turbo::invalid_argument_error("file path is empty");
         }
 
         if (_listener.before_open) {
@@ -52,11 +54,11 @@ namespace alkaid {
                 auto pdir = _file_path.parent_path();
                 if (!pdir.empty()) {
                     std::error_code ec;
-                    if (!collie::filesystem::exists(pdir, ec)) {
+                    if (!ghc::filesystem::exists(pdir, ec)) {
                         if (ec) {
                             continue;
                         }
-                        if (!collie::filesystem::create_directories(pdir, ec)) {
+                        if (!ghc::filesystem::create_directories(pdir, ec)) {
                             continue;
                         }
                     }
@@ -64,23 +66,23 @@ namespace alkaid {
             }
             auto rs = open_file(_file_path, _option);
             if (rs.ok()) {
-                _fd = rs.value_or_die();
+                _fd = rs.value();
                 if (_listener.after_open) {
                     _listener.after_open(_file_path, _fd);
                 }
-                return collie::Status::ok_status();
+                return turbo::OkStatus();
             }
             if (_option.open_interval_ms > 0) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(_option.open_interval_ms));
+                turbo::sleep_for(turbo::Duration::milliseconds(_option.open_interval_ms));
             }
         }
-        return collie::Status::from_errno(errno, "Failed opening file {} for writing", _file_path.c_str());
+        return turbo::ErrnoToStatus(errno, turbo::substitute("Failed opening file $0 for writing", _file_path.c_str()));
     }
 
-    collie::Status SequentialWriteFile::reopen(bool truncate) {
+    turbo::Status SequentialWriteFile::reopen(bool truncate) {
         close();
         if (_file_path.empty()) {
-            return collie::Status::invalid_argument("file path is empty");
+            return turbo::invalid_argument_error("file path is empty");
         }
         OpenOption option = _option;
         if(truncate) {
@@ -89,20 +91,20 @@ namespace alkaid {
         return open(_file_path, option);
     }
 
-    collie::Status SequentialWriteFile::write(const void *data, size_t size) {
+    turbo::Status SequentialWriteFile::write(const void *data, size_t size) {
         INVALID_FD_RETURN(_fd);
         auto rs = sys_write(_fd, data, size);
         if (rs < 0) {
-            return collie::Status::from_errno(errno, "write file {} failed", _file_path.c_str());
+            return turbo::ErrnoToStatus(errno, turbo::substitute("write file $0 failed", _file_path.c_str()));
         }
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 
-    collie::Result<size_t> SequentialWriteFile::size() const {
+    turbo::Result<size_t> SequentialWriteFile::size() const {
         INVALID_FD_RETURN(_fd);
         auto rs = file_size(_fd);
         if(rs < 0) {
-            return collie::Status::from_errno(errno, "get file size failed");
+            return turbo::ErrnoToStatus(errno, "get file size failed");
         }
         return rs;
     }
@@ -122,29 +124,28 @@ namespace alkaid {
         }
     }
 
-    collie::Status SequentialWriteFile::truncate(size_t size) {
+    turbo::Status SequentialWriteFile::truncate(size_t size) {
         INVALID_FD_RETURN(_fd);
         if (::ftruncate(_fd, static_cast<off_t>(size)) != 0) {
-            return collie::Status::from_errno(errno, "Failed truncate file {} for size:{} ", _file_path.c_str(),
-                                              static_cast<off_t>(size));
+            return turbo::ErrnoToStatus(errno, turbo::substitute("Failed truncate file $0 for size:$1 ", _file_path.c_str(),
+                                              static_cast<off_t>(size)));
         }
         if(::lseek(_fd, static_cast<off_t>(size), SEEK_SET) != 0) {
-            return collie::Status::from_errno(errno, "Failed seek file end {} for size:{} ", _file_path.c_str(),
-                                              static_cast<off_t>(size));
+            return turbo::ErrnoToStatus(errno, turbo::substitute("Failed seek file end $0 for size:$1 ", _file_path.c_str(),
+                                              static_cast<off_t>(size)));
         }
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 
-    collie::Status SequentialWriteFile::flush() {
+    turbo::Status SequentialWriteFile::flush() {
         INVALID_FD_RETURN(_fd);
         if (::fsync(_fd) != 0) {
-            return collie::Status::from_errno(errno,
-                                              collie::format("Failed flush to file {}", _file_path.c_str()));
+            return turbo::ErrnoToStatus(errno,turbo::substitute("Failed flush to file $0", _file_path.c_str()));
         }
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 
-    const collie::filesystem::path &SequentialWriteFile::file_path() const {
+    const ghc::filesystem::path &SequentialWriteFile::file_path() const {
         return _file_path;
     }
 

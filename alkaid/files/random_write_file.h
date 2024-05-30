@@ -84,7 +84,7 @@ namespace alkaid {
          * @param truncate truncate file if true, default is false.
          * @return the status of the operation. If the file is opened successfully, the status is OK.
          */
-        [[nodiscard]] collie::Status open(const collie::filesystem::path &path, const OpenOption &option) noexcept override;
+        [[nodiscard]] turbo::Status open(const ghc::filesystem::path &path, const OpenOption &option) noexcept override;
         /**
          * @brief reopen file with path and option specified by user.
          *        The option can be set by set_option function. @see set_option.
@@ -94,7 +94,7 @@ namespace alkaid {
          * @param truncate truncate file if true, default is false.
          * @return the status of the operation. If the file is opened successfully, the status is OK.
          */
-        [[nodiscard]] collie::Status reopen(bool truncate = false);
+        [[nodiscard]] turbo::Status reopen(bool truncate = false);
 
         /**
          * @brief write file content from offset to the specified length.
@@ -105,7 +105,7 @@ namespace alkaid {
          *        If set to true, the file will be truncated to the length + offset.
          * @return the status of the operation.
          */
-        [[nodiscard]] collie::Status write(off_t offset,const void *data, size_t size, bool truncate = false) override;
+        [[nodiscard]] turbo::Status write(off_t offset,const void *data, size_t size, bool truncate = false) override;
 
         /**
          * @brief write file content from offset to the specified length.
@@ -115,7 +115,7 @@ namespace alkaid {
          *       If set to true, the file will be truncated to the str.size() + offset.
          * @return the status of the operation.
          */
-        [[nodiscard]] collie::Status write(off_t offset, std::string_view str, bool truncate = false) override {
+        [[nodiscard]] turbo::Status write(off_t offset, std::string_view str, bool truncate = false) override {
             return write(offset, str.data(), str.size(), truncate);
         }
         /**
@@ -123,13 +123,13 @@ namespace alkaid {
          * @param size [input] file length.
          * @return the status of the operation.
          */
-        [[nodiscard]] collie::Status truncate(size_t size) override;
+        [[nodiscard]] turbo::Status truncate(size_t size) override;
 
         /**
          * @brief get file size.
          * @return the file size and the status of the operation.
          */
-        [[nodiscard]] collie::Result<size_t> size() const override;
+        [[nodiscard]] turbo::Result<size_t> size() const override;
 
         /**
          * @brief close file.
@@ -141,18 +141,18 @@ namespace alkaid {
          * @return the status of the operation.
          */
         [[nodiscard]]
-        collie::Status flush() override;
+        turbo::Status flush() override;
 
         /**
          * @brief get file path.
          * @return file path.
          */
-        [[nodiscard]] const collie::filesystem::path &file_path() const;
+        [[nodiscard]] const ghc::filesystem::path &file_path() const;
 
     private:
         static const size_t npos = std::numeric_limits<size_t>::max();
         int        _fd{-1};
-        collie::filesystem::path _file_path;
+        ghc::filesystem::path _file_path;
         OpenOption _option;
         FileEventListener _listener;
     };

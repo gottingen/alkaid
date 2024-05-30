@@ -16,17 +16,20 @@
 #pragma once
 #include <cstddef>
 #include <cstring>
-#include <map>
 #include <iomanip>
 #include <fstream>
-#include <collie/utility/result.h>
-#include <collie/log/logging.h>
-#include <collie/strings/str_split.h>
-#include <collie/strings/format.h>
+#include <turbo/container/flat_hash_map.h>
+#include <turbo/status/result.h>
+#include <turbo/log/logging.h>
+#include <turbo/strings/str_split.h>
+#include <turbo/strings/str_format.h>
+#include <turbo/strings/str_cat.h>
+#include <turbo/strings/substitute.h>
+#include <turbo/strings/str_split.h>
 #include <cstdint>
 
 namespace polaris {
-    class PropertySet : public std::map<std::string, std::string> {
+    class PropertySet : public turbo::flat_hash_map<std::string, std::string> {
     public:
         void set(const std::string &key, const std::string &value) {
             auto it = find(key);
@@ -38,8 +41,8 @@ namespace polaris {
         }
 
         template<class T>
-        void set(const std::string &key, T value) {
-            auto str = collie::format("{}", value);
+        void set(const std::string_view &key, T value) {
+            auto str = turbo::str_cat(value);
             auto it = find(key);
             if (it == end()) {
                 insert(std::pair<std::string, std::string>(key, str));
@@ -62,39 +65,39 @@ namespace polaris {
             }
         }
 
-        [[nodiscard]] collie::Status load(const std::string &f) {
+        [[nodiscard]] turbo::Status load(const std::string &f) {
             std::ifstream st(f);
             if (!st) {
-                return collie::Status::from_errno(errno, "PropertySet::load: Cannot load the property file {}", f);
+                return turbo::ErrnoToStatus(errno, turbo::substitute("PropertySet::load: Cannot load the property file $0", f));
             }
             return load(st);
         }
 
-        [[nodiscard]] collie::Status save(const std::string &f) {
+        [[nodiscard]] turbo::Status save(const std::string &f) {
             std::ofstream st(f);
             if (!st) {
-                return collie::Status::from_errno(errno, "PropertySet::save: Cannot save. {}", f);
+                return turbo::ErrnoToStatus(errno, turbo::substitute("PropertySet::save: Cannot save. $0", f));
             }
             return save(st);
         }
 
-        [[nodiscard]] collie::Status save(std::ofstream &os) const {
+        [[nodiscard]] turbo::Status save(std::ofstream &os) const {
 
             try {
                 for (auto i = this->begin(); i != this->end(); i++) {
                     os << i->first << "\t" << i->second << std::endl;
                 }
             } catch (std::exception &e) {
-                return collie::Status::from_errno(errno, "PropertySet::save: {}", e.what());
+                return turbo::ErrnoToStatus(errno, turbo::substitute("PropertySet::save: $0", e.what()));
             }
-            return collie::Status::ok_status();
+            return turbo::OkStatus();
         }
 
-        [[nodiscard]] collie::Status load(std::ifstream &is) {
+        [[nodiscard]] turbo::Status load(std::ifstream &is) {
             std::string line;
             try {
             while (getline(is, line)) {
-                std::vector<std::string> tokens = collie::str_split(line, "\t");
+                std::vector<turbo::string_view> tokens = turbo::str_split(line, "\t");
                 if (tokens.size() != 2) {
                     std::cerr << "Property file is illegal. " << line << std::endl;
                     continue;
@@ -102,9 +105,9 @@ namespace polaris {
                 set(tokens[0], tokens[1]);
             }
             } catch (std::exception &e) {
-                return collie::Status::from_errno(errno, "PropertySet::load: {}", e.what());
+                return turbo::ErrnoToStatus(errno, turbo::substitute("PropertySet::load: $0", e.what()));
             }
-            return collie::Status::ok_status();
+            return turbo::OkStatus();
         }
     };
 

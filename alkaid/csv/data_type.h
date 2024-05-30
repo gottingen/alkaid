@@ -23,7 +23,7 @@
 #include <cctype>
 #include <string>
 #include <cassert>
-#include <collie/base/debug_assert.h>
+#include <turbo/base/macros.h>
 
 namespace alkaid {
     /** Enumerates the different CSV field types that are
@@ -148,7 +148,7 @@ namespace alkaid {
                 return (long double) std::numeric_limits<long long int>::max();
             }
 
-            DEBUG_ASSERT_MARK_UNREACHABLE;
+            TURBO_UNREACHABLE();
         }
 
         /** Given a byte size, return the largest number than can be stored in
@@ -179,7 +179,7 @@ namespace alkaid {
                 return (long double) std::numeric_limits<unsigned long long int>::max();
             }
 
-            DEBUG_ASSERT_MARK_UNREACHABLE;
+            TURBO_UNREACHABLE();
         }
 
         /** Largest number that can be stored in a 8-bit integer */

@@ -22,6 +22,8 @@
 
 #include <alkaid/files/internal/sys_io.h>
 #include <alkaid/files/temp_file.h>
+#include <turbo/strings/substitute.h>
+#include <turbo/strings/str_cat.h>
 #include <cstdio>
 #include <fcntl.h>
 #include <unistd.h>
@@ -41,34 +43,34 @@ namespace alkaid {
         std::uniform_int_distribution<char> uniform('a', 'z');
         {
             std::lock_guard lock(temp_file_spin_lock);
-            for(size_t i = 0; i < bits; ++i) {
+            for (size_t i = 0; i < bits; ++i) {
                 gen_name.push_back(uniform(temp_file_bit_gen));
             }
         }
         std::string result;
-        if(!ext.empty()) {
-            result = collie::format("{}{}.{}", prefix, gen_name, ext);
+        if (!ext.empty()) {
+            result = turbo::substitute("$0$1.$2", prefix, gen_name, ext);
         } else {
-            result = collie::format("{}{}", prefix, gen_name);
+            result = turbo::str_cat(prefix, gen_name);
         }
         return result;
     }
 
-    TempFile::TempFile(const FileEventListener &listener) :_file(listener) {
+    TempFile::TempFile(const FileEventListener &listener) : _file(listener) {
 
     }
 
-    [[nodiscard]] collie::Status TempFile::open(std::string_view prefix, std::string_view ext, size_t bits) noexcept {
-        if(_ever_opened) {
-            return collie::Status::ok_status();
+    [[nodiscard]] turbo::Status TempFile::open(std::string_view prefix, std::string_view ext, size_t bits) noexcept {
+        if (_ever_opened) {
+            return turbo::OkStatus();
         }
         _file_path = generate_temp_file_name(prefix, ext, bits);
-        auto rs = _file.open(_file_path,kDefaultTruncateWriteOption);
-        if(!rs.ok()) {
+        auto rs = _file.open(_file_path, kDefaultTruncateWriteOption);
+        if (!rs.ok()) {
             return rs;
         }
         _ever_opened = true;
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 
     // Write until all buffer was written or an error except EINTR.
@@ -90,9 +92,9 @@ namespace alkaid {
         }
     }
 
-    collie::Status TempFile::write(const void *buf, size_t count) {
-        if(!_ever_opened) {
-            return collie::Status::unavailable("TempFile not opened");
+    turbo::Status TempFile::write(const void *buf, size_t count) {
+        if (!_ever_opened) {
+            return turbo::unavailable_error("TempFile not opened");
         }
         return _file.write(buf, count);
     }

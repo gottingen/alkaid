@@ -20,7 +20,7 @@
 #pragma once
 
 #include <fstream>
-#include <collie/utility/result.h>
+#include <turbo/status/result.h>
 
 namespace alkaid {
 
@@ -31,11 +31,11 @@ namespace alkaid {
         ReadlineFile(const ReadlineFile &) = delete;
         ReadlineFile &operator=(const ReadlineFile &) = delete;
 
-        collie::Status open(const std::string &file_path);
+        turbo::Status open(const std::string &file_path);
 
         [[nodiscard]] size_t lines() const { return _line_num; }
 
-        collie::Result<std::string> readline();
+        turbo::Result<std::string> readline();
 
         void close();
 

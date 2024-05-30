@@ -39,8 +39,9 @@ if (CARBIN_BUILD_BENCHMARK)
 endif ()
 
 find_package(Threads REQUIRED)
-find_package(collie REQUIRED)
-include_directories(${collie_INCLUDE_DIR})
+find_package(turbo REQUIRED)
+get_target_property(TURBO_STATIC_LIB turbo::turbo_static LOCATION)
+include_directories(${turbo_INCLUDE_DIR})
 ############################################################
 #
 # add you libs to the CARBIN_DEPS_LINK variable eg as turbo
@@ -48,7 +49,7 @@ include_directories(${collie_INCLUDE_DIR})
 # CARBIN_SYSTEM_DYLINK, using it for fun.
 ##########################################################
 set(CARBIN_DEPS_LINK
-        #${TURBO_LIB}
+        ${TURBO_STATIC_LIB}
         ${CARBIN_SYSTEM_DYLINK}
         )
 list(REMOVE_DUPLICATES CARBIN_DEPS_LINK)

@@ -21,6 +21,7 @@
 
 #include <alkaid/files/internal/sys_io.h>
 #include <alkaid/files/random_read_file.h>
+#include <turbo/times/time.h>
 #include <cstdio>
 #include <fcntl.h>
 #include <unistd.h>
@@ -36,13 +37,13 @@ namespace alkaid {
         this->close();
     }
 
-    collie::Status
-    RandomReadFile::open(const collie::filesystem::path &path, const OpenOption &option) noexcept {
+    turbo::Status
+    RandomReadFile::open(const ghc::filesystem::path &path, const OpenOption &option) noexcept {
         this->close();
         _option = option;
         _file_path = path;
         if(_file_path.empty()) {
-            return collie::Status::invalid_argument("file path is empty");
+            return turbo::invalid_argument_error("file path is empty");
         }
         if (_listener.before_open) {
             _listener.before_open(_file_path);
@@ -51,42 +52,42 @@ namespace alkaid {
         for (int tries = 0; tries < _option.open_tries; ++tries) {
             auto rs = open_file(_file_path, _option);
             if (rs.ok()) {
-                _fd = rs.value_or_die();
+                _fd = rs.value();
                 if (_listener.after_open) {
                     _listener.after_open(_file_path, _fd);
                 }
-                return collie::Status::ok_status();
+                return turbo::OkStatus();
             }
             if (_option.open_interval_ms > 0) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(_option.open_interval_ms));
+                turbo::sleep_for(turbo::Duration::milliseconds(_option.open_interval_ms));
             }
         }
-        return collie::Status::from_errno(errno, "Failed opening file {} for reading", _file_path.c_str());
+        return turbo::ErrnoToStatus(errno, "Failed opening file for reading");
     }
 
-    collie::Result<size_t> RandomReadFile::read(off_t offset, void *buff, size_t len) {
+    turbo::Result<size_t> RandomReadFile::read(off_t offset, void *buff, size_t len) {
         INVALID_FD_RETURN(_fd);
         size_t has_read = 0;
         /// _fd may > 0 with _fp valid
         ssize_t read_size = sys_pread(_fd, buff, len, static_cast<off_t>(offset));
         if(read_size < 0 ) {
-            return collie::Status::from_errno(errno, "Failed reading file {} for reading", _file_path.c_str());
+            return turbo::ErrnoToStatus(errno, "Failed reading file  for reading");
         }
         // read_size > 0 means read the end of file
         return has_read;
     }
 
-    collie::Result<size_t> RandomReadFile::read(off_t offset, std::string *content, size_t n) {
+    turbo::Result<size_t> RandomReadFile::read(off_t offset, std::string *content, size_t n) {
         INVALID_FD_RETURN(_fd);
         size_t len = n;
         if(len == kInfiniteFileSize) {
             auto r = file_size(_fd);
             if(r == -1) {
-                return collie::Status::from_errno(errno, "get file size failed");
+                return turbo::ErrnoToStatus(errno, "get file size failed");
             }
             len = r - offset;
             if(len <= 0) {
-                return collie::Status::invalid_argument("bad offset");
+                return turbo::invalid_argument_error("bad offset");
             }
         }
         auto pre_len = content->size();
@@ -95,7 +96,7 @@ namespace alkaid {
         auto rs = sys_pread(_fd, pdata, len, offset);
         if(rs < 0) {
             content->resize(pre_len);
-            return collie::Status::from_errno(errno, "Failed reading file {} for reading", _file_path.c_str());
+            return turbo::ErrnoToStatus(errno, "Failed reading file for reading");
         }
         content->resize(pre_len + rs);
         return rs;

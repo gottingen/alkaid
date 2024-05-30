@@ -73,7 +73,7 @@ namespace alkaid {
          * @param path file path
          * @param option file option
          */
-        [[nodiscard]] collie::Status open(const collie::filesystem::path &path, const OpenOption &option = kDefaultReadOption) noexcept override;
+        [[nodiscard]] turbo::Status open(const ghc::filesystem::path &path, const OpenOption &option = kDefaultReadOption) noexcept override;
 
         /**
          * @brief read file content from offset to the specified length.
@@ -83,7 +83,7 @@ namespace alkaid {
          *          size, the file content will be read from offset to the end of the file.
          * @return the length of the file content read and the status of the operation.
          */
-        [[nodiscard]] collie::Result<size_t> read(off_t offset, std::string *content, size_t n = kInfiniteFileSize) override;
+        [[nodiscard]] turbo::Result<size_t> read(off_t offset, std::string *content, size_t n = kInfiniteFileSize) override;
 
         /**
          * @brief read file content from offset to the specified length.
@@ -95,7 +95,7 @@ namespace alkaid {
          *            in the result.
          * @return the length of the file content read and the status of the operation.
          */
-        [[nodiscard]] collie::Result<size_t> read(off_t offset, void *buff, size_t len) override;
+        [[nodiscard]] turbo::Result<size_t> read(off_t offset, void *buff, size_t len) override;
 
         /**
          * @brief close file.
@@ -105,7 +105,7 @@ namespace alkaid {
     private:
 
         int        _fd;
-        collie::filesystem::path _file_path;
+        ghc::filesystem::path _file_path;
         OpenOption _option;
         FileEventListener _listener;
     };

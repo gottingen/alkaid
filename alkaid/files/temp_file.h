@@ -49,9 +49,9 @@ namespace alkaid {
             _file.close();
         }
 
-        [[nodiscard]] virtual collie::Status open(std::string_view prefix = kDefaultTempFilePrefix, std::string_view ext ="", size_t bits = 6) noexcept override;
+        [[nodiscard]] virtual turbo::Status open(std::string_view prefix = kDefaultTempFilePrefix, std::string_view ext ="", size_t bits = 6) noexcept override;
 
-        collie::Status write(const void *buf, size_t count) override;
+        turbo::Status write(const void *buf, size_t count) override;
 
         // Save binary data |buf| (|count| bytes) to file, overwriting existing file.
         // Returns 0 when successful, -1 otherwise.
@@ -59,13 +59,13 @@ namespace alkaid {
         // Get name of the temporary file.
         std::string path() const override { return _file_path; }
 
-        [[nodiscard]] collie::Status write(std::string_view buff) override;
+        [[nodiscard]] turbo::Status write(std::string_view buff) override;
 
-        [[nodiscard]] collie::Status flush() override { return _file.flush(); }
+        [[nodiscard]] turbo::Status flush() override { return _file.flush(); }
 
-        [[nodiscard]] collie::Status truncate(size_t size) override { return _file.truncate(size); }
+        [[nodiscard]] turbo::Status truncate(size_t size) override { return _file.truncate(size); }
 
-        [[nodiscard]] collie::Result<size_t> size() const override { return _file.size(); }
+        [[nodiscard]] turbo::Result<size_t> size() const override { return _file.size(); }
 
         void close() override { _file.close(); }
 
@@ -80,7 +80,7 @@ namespace alkaid {
 
     /// inlined implementations
 
-    [[nodiscard]] inline collie::Status TempFile::write(std::string_view buff) {
+    [[nodiscard]] inline turbo::Status TempFile::write(std::string_view buff) {
         return write(buff.data(), buff.size());
     }
 

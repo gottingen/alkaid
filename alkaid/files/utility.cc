@@ -15,20 +15,21 @@
 #include <alkaid/files/utility.h>
 #include <alkaid/files/sequential_read_file.h>
 #include <alkaid/files/sequential_write_file.h>
+#include <turbo/strings/substitute.h>
 
 namespace alkaid {
 
-    collie::Status list_files(const std::string_view &root_path,std::vector<std::string> &result, bool full_path) noexcept{
+    turbo::Status list_files(const std::string_view &root_path,std::vector<std::string> &result, bool full_path) noexcept{
         std::error_code ec;
-        collie::filesystem::directory_iterator itr(root_path, ec);
+        ghc::filesystem::directory_iterator itr(root_path, ec);
         if(ec) {
-            return collie::Status::from_errno(ec.value(), "open directory error:{}", ec.message());
+            return turbo::ErrnoToStatus(ec.value(), turbo::substitute("open directory error:$0", ec.message()));
         }
-        collie::filesystem::directory_iterator end;
+        ghc::filesystem::directory_iterator end;
         for(;itr != end;++itr) {
             if(!itr->is_directory(ec)) {
                 if(ec) {
-                    return collie::Status::from_errno(ec.value(), "test if file error:{}", ec.message());
+                    return turbo::ErrnoToStatus(ec.value(), turbo::substitute("test if file error: $0", ec.message()));
                 }
                 if(full_path) {
                     result.emplace_back(itr->path().string());
@@ -37,20 +38,20 @@ namespace alkaid {
                 }
             }
         }
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 
-    collie::Status list_directories(const std::string_view &root_path,std::vector<std::string> &result, bool full_path) noexcept {
+    turbo::Status list_directories(const std::string_view &root_path,std::vector<std::string> &result, bool full_path) noexcept {
         std::error_code ec;
-        collie::filesystem::directory_iterator itr(root_path, ec);
+        ghc::filesystem::directory_iterator itr(root_path, ec);
         if(ec) {
-            return collie::Status::from_errno(ec.value(), "open directory error:{}", ec.message());
+            return turbo::ErrnoToStatus(ec.value(), turbo::substitute("open directory error: $0", ec.message()));
         }
-        collie::filesystem::directory_iterator end;
+        ghc::filesystem::directory_iterator end;
         for(;itr != end;++itr) {
             if(itr->is_directory(ec)) {
                 if(ec) {
-                    return collie::Status::from_errno(ec.value(), "test if directory error:{}", ec.message());
+                    return turbo::ErrnoToStatus(ec.value(), turbo::substitute("test if directory error:$0", ec.message()));
                 }
                 if(full_path) {
                     result.emplace_back(itr->path().string());
@@ -59,10 +60,10 @@ namespace alkaid {
                 }
             }
         }
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 
-    collie::Status read_file(const std::string_view &file_path, std::string &result, bool append) noexcept {
+    turbo::Status read_file(const std::string_view &file_path, std::string &result, bool append) noexcept {
         if(!append) {
             result.clear();
         }
@@ -76,10 +77,10 @@ namespace alkaid {
             return r.status();
         }
         file.close();
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 
-    collie::Status write_file(const std::string_view &file_path, const std::string_view &content, bool truncate) noexcept {
+    turbo::Status write_file(const std::string_view &file_path, const std::string_view &content, bool truncate) noexcept {
         SequentialWriteFile file;
         OpenOption option = truncate ? kDefaultTruncateWriteOption : kDefaultAppendWriteOption;
         auto rs = file.open(file_path, option);
@@ -92,6 +93,6 @@ namespace alkaid {
             return rs;
         }
         file.close();
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 }  // namespace alkaid

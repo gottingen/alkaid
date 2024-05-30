@@ -18,7 +18,7 @@
 #include <string>
 #include <cstdio>
 #include <tuple>
-#include <collie/utility/result.h>
+#include <turbo/status/result.h>
 
 namespace alkaid {
 
@@ -36,7 +36,7 @@ namespace alkaid {
      * @param full_path [input] if true, the result will be the full path of the file.
      * @return the status of the operation.
      */
-        static collie::Status list_files(const std::string_view &root_path,std::vector<std::string> &result, bool full_path = true) noexcept;
+        static turbo::Status list_files(const std::string_view &root_path,std::vector<std::string> &result, bool full_path = true) noexcept;
 
         /**
          * @ingroup turbo_files_utility
@@ -52,7 +52,7 @@ namespace alkaid {
          * @param full_path [input] if true, the result will be the full path of the directory.
          * @return the status of the operation.
          */
-        static collie::Status list_directories(const std::string_view &root_path,std::vector<std::string> &result, bool full_path = true) noexcept;
+        static turbo::Status list_directories(const std::string_view &root_path,std::vector<std::string> &result, bool full_path = true) noexcept;
 
         /**
          * @ingroup turbo_files_utility
@@ -62,7 +62,7 @@ namespace alkaid {
          * @param append [input] if true, the file content will be appended to the result.
          * @return the status of the operation.
          */
-        static collie::Status read_file(const std::string_view &file_path, std::string &result, bool append = false) noexcept;
+        static turbo::Status read_file(const std::string_view &file_path, std::string &result, bool append = false) noexcept;
 
         /**
          * @ingroup turbo_files_utility
@@ -72,5 +72,5 @@ namespace alkaid {
          * @param truncate [input] if true, the file will be truncated before write.
          * @return the status of the operation.
          */
-        static collie::Status write_file(const std::string_view &file_path, const std::string_view &content, bool truncate = true) noexcept;
+        static turbo::Status write_file(const std::string_view &file_path, const std::string_view &content, bool truncate = true) noexcept;
 }  // namespace alkaid

@@ -17,7 +17,7 @@
 //
 
 #include <alkaid/files/fwd.h>
-
+#include <alkaid/config/property_set.h>
 namespace alkaid {
 
 

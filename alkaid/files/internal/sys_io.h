@@ -46,9 +46,9 @@ namespace alkaid {
 
     ssize_t file_size(int fd);
 
-    collie::Result<FILE_HANDLER> open_file(const std::string &filename, const OpenOption &option);
+    turbo::Result<FILE_HANDLER> open_file(const std::string &filename, const OpenOption &option);
 
-    collie::Result<FILE_HANDLER> open_file_read(const std::string &filename);
+    turbo::Result<FILE_HANDLER> open_file_read(const std::string &filename);
 
-    collie::Result<FILE_HANDLER> open_file_write(const std::string &filename, bool truncate = false);
+    turbo::Result<FILE_HANDLER> open_file_write(const std::string &filename, bool truncate = false);
 }  // namespace alkaid

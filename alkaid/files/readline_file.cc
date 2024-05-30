@@ -20,24 +20,24 @@
 
 namespace alkaid {
 
-    collie::Status ReadlineFile::open(const std::string &file_path) {
+    turbo::Status ReadlineFile::open(const std::string &file_path) {
         _file.open(file_path);
         if (!_file.is_open()) {
-            return collie::Status(collie::StatusCode::IOError, "open file failed");
+            return turbo::unavailable_error("open file failed");
         }
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 
-    collie::Result<std::string> ReadlineFile::readline() {
+    turbo::Result<std::string> ReadlineFile::readline() {
         std::string line;
         if (std::getline(_file, line)) {
             ++_line_num;
-            return collie::Result<std::string>(line);
+            return turbo::Result<std::string>(line);
         }
         if (_file.eof()) {
-            return collie::Status::unavailable("eof");
+            return turbo::unavailable_error("eof");
         }
-        return collie::Result<std::string>(collie::Status(collie::StatusCode::IOError, "readline failed"));
+        return turbo::unavailable_error("readline failed");
     }
 
     void ReadlineFile::close() {

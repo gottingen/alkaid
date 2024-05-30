@@ -21,6 +21,8 @@
 
 #include <alkaid/files/internal/sys_io.h>
 #include <alkaid/files/sequential_read_file.h>
+#include <turbo/times/time.h>
+#include <turbo/strings/substitute.h>
 #include <cstdio>
 #include <fcntl.h>
 #include <unistd.h>
@@ -36,13 +38,13 @@ namespace alkaid {
         close();
     }
 
-    collie::Status
-    SequentialReadFile::open(const collie::filesystem::path &path, const OpenOption &option) noexcept {
+    turbo::Status
+    SequentialReadFile::open(const ghc::filesystem::path &path, const OpenOption &option) noexcept {
         close();
         _option = option;
         _file_path = path;
         if(_file_path.empty()) {
-            return collie::Status::invalid_argument("file path is empty");
+            return turbo::invalid_argument_error("file path is empty");
         }
         if (_listener.before_open) {
             _listener.before_open(_file_path);
@@ -51,39 +53,39 @@ namespace alkaid {
         for (int tries = 0; tries < _option.open_tries; ++tries) {
             auto rs = open_file(_file_path, _option);
             if (rs.ok()) {
-                _fd = rs.value_or_die();
+                _fd = rs.value();
                 if (_listener.after_open) {
                     _listener.after_open(_file_path, _fd);
                 }
-                return collie::Status::ok_status();
+                return turbo::OkStatus();
             }
             if (_option.open_interval_ms > 0) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(_option.open_interval_ms));
+                turbo::sleep_for(turbo::Duration::milliseconds(_option.open_interval_ms));
             }
         }
-        return collie::Status::from_errno(errno, "Failed opening file {} for reading", _file_path.c_str());
+        return turbo::ErrnoToStatus(errno, turbo::substitute("Failed opening file $0 for reading", _file_path.c_str()));
     }
 
-    collie::Result<size_t> SequentialReadFile::read(void *buff, size_t len) {
+    turbo::Result<size_t> SequentialReadFile::read(void *buff, size_t len) {
         INVALID_FD_RETURN(_fd);
         if (len == 0) {
             return 0;
         }
         auto nread = sys_read(_fd, buff, len);
         if(nread < 0) {
-            return collie::Status::from_errno(errno, "read file {} failed", _file_path.c_str());
+            return turbo::ErrnoToStatus(errno, turbo::substitute("read file $0 failed", _file_path.c_str()));
         }
         _position += nread;
         return nread;
     }
 
-    collie::Result<size_t> SequentialReadFile::read(std::string *content, size_t n) {
+    turbo::Result<size_t> SequentialReadFile::read(std::string *content, size_t n) {
         INVALID_FD_RETURN(_fd);
         size_t len = n;
         if (len == kInfiniteFileSize) {
             auto r = file_size(_fd);
             if (r == -1) {
-                return collie::Status::from_errno(errno, "get file size failed");
+                return turbo::ErrnoToStatus(errno, "get file size failed");
             }
             len = r;
             if(len == 0) {
@@ -96,7 +98,7 @@ namespace alkaid {
         auto nread = sys_read(_fd, pdata, len);
         if(nread < 0) {
             content->resize(pre_len);
-            return collie::Status::from_errno(errno, "read file {} failed", _file_path.c_str());
+            return turbo::ErrnoToStatus(errno, turbo::substitute("read file $0 failed", _file_path.c_str()));
         }
         _position += nread;
         content->resize(pre_len + nread);
@@ -118,22 +120,22 @@ namespace alkaid {
         }
     }
 
-    collie::Status SequentialReadFile::skip(off_t n) {
+    turbo::Status SequentialReadFile::skip(off_t n) {
         INVALID_FD_RETURN(_fd);
 
         ::lseek(_fd, n, SEEK_CUR);
-        return collie::Status::ok_status();
+        return turbo::OkStatus();
     }
 
-    collie::Result<bool> SequentialReadFile::is_eof() const {
+    turbo::Result<bool> SequentialReadFile::is_eof() const {
         INVALID_FD_RETURN(_fd);
         auto fp = fdopen(_fd, "rb");
         if (fp == nullptr) {
-            return collie::Status::from_errno(errno,"test file eof {}", _file_path.c_str());
+            return turbo::ErrnoToStatus(errno, turbo::substitute("test file eof $0", _file_path.c_str()));
         }
         auto ret = ::feof(fp);
         if (ret < 0) {
-            return collie::Status::from_errno(errno, "test file eof {}", _file_path.c_str());
+            return turbo::ErrnoToStatus(errno, turbo::substitute("test file eof $0", _file_path.c_str()));
         }
         return ret;
     }
