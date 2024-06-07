@@ -23,13 +23,13 @@ namespace alkaid {
         std::error_code ec;
         ghc::filesystem::directory_iterator itr(root_path, ec);
         if(ec) {
-            return turbo::ErrnoToStatus(ec.value(), turbo::substitute("open directory error:$0", ec.message()));
+            return turbo::errno_to_status(ec.value(), turbo::substitute("open directory error:$0", ec.message()));
         }
         ghc::filesystem::directory_iterator end;
         for(;itr != end;++itr) {
             if(!itr->is_directory(ec)) {
                 if(ec) {
-                    return turbo::ErrnoToStatus(ec.value(), turbo::substitute("test if file error: $0", ec.message()));
+                    return turbo::errno_to_status(ec.value(), turbo::substitute("test if file error: $0", ec.message()));
                 }
                 if(full_path) {
                     result.emplace_back(itr->path().string());
@@ -45,13 +45,13 @@ namespace alkaid {
         std::error_code ec;
         ghc::filesystem::directory_iterator itr(root_path, ec);
         if(ec) {
-            return turbo::ErrnoToStatus(ec.value(), turbo::substitute("open directory error: $0", ec.message()));
+            return turbo::errno_to_status(ec.value(), turbo::substitute("open directory error: $0", ec.message()));
         }
         ghc::filesystem::directory_iterator end;
         for(;itr != end;++itr) {
             if(itr->is_directory(ec)) {
                 if(ec) {
-                    return turbo::ErrnoToStatus(ec.value(), turbo::substitute("test if directory error:$0", ec.message()));
+                    return turbo::errno_to_status(ec.value(), turbo::substitute("test if directory error:$0", ec.message()));
                 }
                 if(full_path) {
                     result.emplace_back(itr->path().string());
