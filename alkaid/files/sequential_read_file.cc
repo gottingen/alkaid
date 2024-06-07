@@ -63,7 +63,7 @@ namespace alkaid {
                 turbo::sleep_for(turbo::Duration::milliseconds(_option.open_interval_ms));
             }
         }
-        return turbo::ErrnoToStatus(errno, turbo::substitute("Failed opening file $0 for reading", _file_path.c_str()));
+        return turbo::errno_to_status(errno, turbo::substitute("Failed opening file $0 for reading", _file_path.c_str()));
     }
 
     turbo::Result<size_t> SequentialReadFile::read(void *buff, size_t len) {
@@ -73,7 +73,7 @@ namespace alkaid {
         }
         auto nread = sys_read(_fd, buff, len);
         if(nread < 0) {
-            return turbo::ErrnoToStatus(errno, turbo::substitute("read file $0 failed", _file_path.c_str()));
+            return turbo::errno_to_status(errno, turbo::substitute("read file $0 failed", _file_path.c_str()));
         }
         _position += nread;
         return nread;
@@ -85,7 +85,7 @@ namespace alkaid {
         if (len == kInfiniteFileSize) {
             auto r = file_size(_fd);
             if (r == -1) {
-                return turbo::ErrnoToStatus(errno, "get file size failed");
+                return turbo::errno_to_status(errno, "get file size failed");
             }
             len = r;
             if(len == 0) {
@@ -98,7 +98,7 @@ namespace alkaid {
         auto nread = sys_read(_fd, pdata, len);
         if(nread < 0) {
             content->resize(pre_len);
-            return turbo::ErrnoToStatus(errno, turbo::substitute("read file $0 failed", _file_path.c_str()));
+            return turbo::errno_to_status(errno, turbo::substitute("read file $0 failed", _file_path.c_str()));
         }
         _position += nread;
         content->resize(pre_len + nread);
@@ -131,11 +131,11 @@ namespace alkaid {
         INVALID_FD_RETURN(_fd);
         auto fp = fdopen(_fd, "rb");
         if (fp == nullptr) {
-            return turbo::ErrnoToStatus(errno, turbo::substitute("test file eof $0", _file_path.c_str()));
+            return turbo::errno_to_status(errno, turbo::substitute("test file eof $0", _file_path.c_str()));
         }
         auto ret = ::feof(fp);
         if (ret < 0) {
-            return turbo::ErrnoToStatus(errno, turbo::substitute("test file eof $0", _file_path.c_str()));
+            return turbo::errno_to_status(errno, turbo::substitute("test file eof $0", _file_path.c_str()));
         }
         return ret;
     }

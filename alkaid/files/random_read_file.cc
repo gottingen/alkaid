@@ -62,7 +62,7 @@ namespace alkaid {
                 turbo::sleep_for(turbo::Duration::milliseconds(_option.open_interval_ms));
             }
         }
-        return turbo::ErrnoToStatus(errno, "Failed opening file for reading");
+        return turbo::errno_to_status(errno, "Failed opening file for reading");
     }
 
     turbo::Result<size_t> RandomReadFile::read(off_t offset, void *buff, size_t len) {
@@ -71,7 +71,7 @@ namespace alkaid {
         /// _fd may > 0 with _fp valid
         ssize_t read_size = sys_pread(_fd, buff, len, static_cast<off_t>(offset));
         if(read_size < 0 ) {
-            return turbo::ErrnoToStatus(errno, "Failed reading file  for reading");
+            return turbo::errno_to_status(errno, "Failed reading file  for reading");
         }
         // read_size > 0 means read the end of file
         return has_read;
@@ -83,7 +83,7 @@ namespace alkaid {
         if(len == kInfiniteFileSize) {
             auto r = file_size(_fd);
             if(r == -1) {
-                return turbo::ErrnoToStatus(errno, "get file size failed");
+                return turbo::errno_to_status(errno, "get file size failed");
             }
             len = r - offset;
             if(len <= 0) {
@@ -96,7 +96,7 @@ namespace alkaid {
         auto rs = sys_pread(_fd, pdata, len, offset);
         if(rs < 0) {
             content->resize(pre_len);
-            return turbo::ErrnoToStatus(errno, "Failed reading file for reading");
+            return turbo::errno_to_status(errno, "Failed reading file for reading");
         }
         content->resize(pre_len + rs);
         return rs;

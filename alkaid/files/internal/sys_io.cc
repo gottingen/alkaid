@@ -183,7 +183,7 @@ namespace alkaid {
     turbo::Result<FILE_HANDLER> open_file(const std::string &filename, const OpenOption &option) {
         const FILE_HANDLER fd = ::open((filename.c_str()), option.flags, option.mode);
         if (fd == -1) {
-            return turbo::ErrnoToStatus(errno, turbo::substitute("Failed opening file $0 for reading", filename.c_str()));
+            return turbo::errno_to_status(errno, turbo::substitute("Failed opening file $0 for reading", filename.c_str()));
         }
         return fd;
     }

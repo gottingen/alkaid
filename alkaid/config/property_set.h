@@ -19,7 +19,7 @@
 #include <iomanip>
 #include <fstream>
 #include <turbo/container/flat_hash_map.h>
-#include <turbo/status/result.h>
+#include <turbo/utility/status.h>
 #include <turbo/log/logging.h>
 #include <turbo/strings/str_split.h>
 #include <turbo/strings/str_format.h>
@@ -68,7 +68,7 @@ namespace polaris {
         [[nodiscard]] turbo::Status load(const std::string &f) {
             std::ifstream st(f);
             if (!st) {
-                return turbo::ErrnoToStatus(errno, turbo::substitute("PropertySet::load: Cannot load the property file $0", f));
+                return turbo::errno_to_status(errno, turbo::substitute("PropertySet::load: Cannot load the property file $0", f));
             }
             return load(st);
         }
@@ -76,7 +76,7 @@ namespace polaris {
         [[nodiscard]] turbo::Status save(const std::string &f) {
             std::ofstream st(f);
             if (!st) {
-                return turbo::ErrnoToStatus(errno, turbo::substitute("PropertySet::save: Cannot save. $0", f));
+                return turbo::errno_to_status(errno, turbo::substitute("PropertySet::save: Cannot save. $0", f));
             }
             return save(st);
         }
@@ -88,7 +88,7 @@ namespace polaris {
                     os << i->first << "\t" << i->second << std::endl;
                 }
             } catch (std::exception &e) {
-                return turbo::ErrnoToStatus(errno, turbo::substitute("PropertySet::save: $0", e.what()));
+                return turbo::errno_to_status(errno, turbo::substitute("PropertySet::save: $0", e.what()));
             }
             return turbo::OkStatus();
         }
@@ -97,7 +97,7 @@ namespace polaris {
             std::string line;
             try {
             while (getline(is, line)) {
-                std::vector<turbo::string_view> tokens = turbo::str_split(line, "\t");
+                std::vector<std::string_view> tokens = turbo::str_split(line, "\t");
                 if (tokens.size() != 2) {
                     std::cerr << "Property file is illegal. " << line << std::endl;
                     continue;
@@ -105,7 +105,7 @@ namespace polaris {
                 set(tokens[0], tokens[1]);
             }
             } catch (std::exception &e) {
-                return turbo::ErrnoToStatus(errno, turbo::substitute("PropertySet::load: $0", e.what()));
+                return turbo::errno_to_status(errno, turbo::substitute("PropertySet::load: $0", e.what()));
             }
             return turbo::OkStatus();
         }

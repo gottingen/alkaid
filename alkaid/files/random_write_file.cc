@@ -80,7 +80,7 @@ namespace alkaid {
                 turbo::sleep_for(turbo::Duration::milliseconds(_option.open_interval_ms));
             }
         }
-        return turbo::ErrnoToStatus(errno, "Failed opening file {} for writing");
+        return turbo::errno_to_status(errno, "Failed opening file {} for writing");
     }
 
     turbo::Status RandomWriteFile::reopen(bool truncate) {
@@ -100,11 +100,11 @@ namespace alkaid {
 
         ssize_t write_size = ::pwrite(_fd, data, size, static_cast<off_t>(offset));
         if (write_size < 0) {
-            return turbo::ErrnoToStatus(errno, _file_path.c_str());
+            return turbo::errno_to_status(errno, _file_path.c_str());
         }
         if (truncate) {
             if (::ftruncate(_fd, static_cast<off_t>(offset + size)) != 0) {
-                return turbo::ErrnoToStatus(errno, turbo::substitute("Failed truncate file $0 for size:$1 ",
+                return turbo::errno_to_status(errno, turbo::substitute("Failed truncate file $0 for size:$1 ",
                                                                      _file_path.c_str(),
                                                                      static_cast<off_t>(offset + size)));
             }
@@ -114,7 +114,7 @@ namespace alkaid {
 
     turbo::Status RandomWriteFile::truncate(size_t size) {
         if (::ftruncate(_fd, static_cast<off_t>(size)) != 0) {
-            return turbo::ErrnoToStatus(errno,
+            return turbo::errno_to_status(errno,
                                         turbo::substitute("Failed truncate file $0 for size:$1 ", _file_path.c_str(),
                                                           static_cast<off_t>(size)));
         }
@@ -125,7 +125,7 @@ namespace alkaid {
         INVALID_FD_RETURN(_fd);
         auto rs = file_size(_fd);
         if (rs == -1) {
-            return turbo::ErrnoToStatus(errno, "get file size failed");
+            return turbo::errno_to_status(errno, "get file size failed");
         }
         return rs;
     }
@@ -148,7 +148,7 @@ namespace alkaid {
     turbo::Status RandomWriteFile::flush() {
         INVALID_FD_RETURN(_fd);
         if (::fdatasync(_fd) != 0) {
-            return turbo::ErrnoToStatus(errno, turbo::substitute("Failed flush to file $0", _file_path.c_str()));
+            return turbo::errno_to_status(errno, turbo::substitute("Failed flush to file $0", _file_path.c_str()));
         }
         return turbo::OkStatus();
     }
