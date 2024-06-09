@@ -78,7 +78,7 @@ add_subdirectory(alkaid)
 # belows are auto, edit it be cation
 ####################################################################
 if (CARBIN_BUILD_TEST)
-    #add_subdirectory(tests)
+    add_subdirectory(tests)
 endif ()
 
 if (CARBIN_BUILD_BENCHMARK)

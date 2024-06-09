@@ -18,17 +18,16 @@
 ###########################################################################
 ###carbin_example
 set(ALKAID_SRC
-        files/internal/sys_io.cc
-        files/internal/fd_utility.cc
-        files/file_watcher.cc
-        files/fwd.cc
-        files/sequential_read_file.cc
-        files/sequential_write_file.cc
-        files/random_read_file.cc
-        files/random_write_file.cc
-        files/temp_file.cc
-        files/utility.cc
-        files/readline_file.cc
+        files/interface.cc
+        files/local/sys_io.cc
+        files/local/sequential_read_file.cc
+        files/local/sequential_write_file.cc
+        files/local/random_read_file.cc
+        files/local/random_write_file.cc
+        files/local/temp_file.cc
+        files/local/sequential_read_mmap_file.cc
+        files/local/random_read_mmap_file.cc
+        files/localfs.cc
         csv/format.cc
         csv/row.cc
 )

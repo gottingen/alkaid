@@ -428,34 +428,34 @@ namespace alkaid {
     bool operator>=(const basic_mmap<AccessMode, ByteT> &a,
                     const basic_mmap<AccessMode, ByteT> &b);
 
-/**
- * This is the basis for all read-only mmap objects and should be preferred over
- * directly using `basic_mmap`.
- */
+    /**
+     * This is the basis for all read-only mmap objects and should be preferred over
+     * directly using `basic_mmap`.
+     */
     template<typename ByteT>
     using basic_mmap_source = basic_mmap<access_mode::read, ByteT>;
 
-/**
- * This is the basis for all read-write mmap objects and should be preferred over
- * directly using `basic_mmap`.
- */
+    /**
+     * This is the basis for all read-write mmap objects and should be preferred over
+     * directly using `basic_mmap`.
+     */
     template<typename ByteT>
     using basic_mmap_sink = basic_mmap<access_mode::write, ByteT>;
 
-/**
- * These aliases cover the most common use cases, both representing a raw byte stream
- * (either with a char or an unsigned char/uint8_t).
- */
+    /**
+     * These aliases cover the most common use cases, both representing a raw byte stream
+     * (either with a char or an unsigned char/uint8_t).
+     */
     using mmap_source = basic_mmap_source<char>;
     using ummap_source = basic_mmap_source<unsigned char>;
 
     using mmap_sink = basic_mmap_sink<char>;
     using ummap_sink = basic_mmap_sink<unsigned char>;
 
-/**
- * Convenience factory method that constructs a mapping for any `basic_mmap` or
- * `basic_mmap` type.
- */
+    /**
+     * Convenience factory method that constructs a mapping for any `basic_mmap` or
+     * `basic_mmap` type.
+     */
     template<
             typename MMap,
             typename MappingToken
@@ -467,13 +467,13 @@ namespace alkaid {
         return mmap;
     }
 
-/**
- * Convenience factory method.
- *
- * MappingToken may be a String (`std::string`, `std::string_view`, `const char*`,
- * `std::filesystem::path`, `std::vector<char>`, or similar), or a
- * `mmap_source::handle_type`.
- */
+    /**
+     * Convenience factory method.
+     *
+     * MappingToken may be a String (`std::string`, `std::string_view`, `const char*`,
+     * `std::filesystem::path`, `std::vector<char>`, or similar), or a
+     * `mmap_source::handle_type`.
+     */
     template<typename MappingToken>
     mmap_source make_mmap_source(const MappingToken &token, mmap_source::size_type offset,
                                  mmap_source::size_type length, std::error_code &error) {
