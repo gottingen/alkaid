@@ -300,7 +300,7 @@
 #error "Can't raise unicode errors with exception support disabled"
 #endif
 
-namespace ghc {
+namespace alkaid {
 namespace filesystem {
 
 #if defined(GHC_HAS_CUSTOM_STRING_VIEW)
@@ -372,7 +372,7 @@ public:
     /// The path format in which the constructor argument is given.
     enum format {
         generic_format,  ///< The generic format, internally used by
-                         ///< ghc::filesystem::path with slashes
+                         ///< alkaid::filesystem::path with slashes
         native_format,   ///< The format native to the current platform this code
                          ///< is build for
         auto_format,     ///< Try to auto-detect the format, fallback to native
@@ -627,12 +627,12 @@ std::basic_istream<charT, traits>& operator>>(std::basic_istream<charT, traits>&
 // [pfs.path.factory] path factory functions
 template <class Source, typename = path::path_from_string<Source>>
 #if defined(__cpp_lib_char8_t) && !defined(GHC_FILESYSTEM_ENFORCE_CPP17_API)
-[[deprecated("use ghc::filesystem::path::path() with std::u8string instead")]]
+[[deprecated("use alkaid::filesystem::path::path() with std::u8string instead")]]
 #endif
 path u8path(const Source& source);
 template <class InputIterator>
 #if defined(__cpp_lib_char8_t) && !defined(GHC_FILESYSTEM_ENFORCE_CPP17_API)
-[[deprecated("use ghc::filesystem::path::path() with std::u8string instead")]]
+[[deprecated("use alkaid::filesystem::path::path() with std::u8string instead")]]
 #endif
 path u8path(InputIterator first, InputIterator last);
 
@@ -6066,7 +6066,7 @@ GHC_INLINE recursive_directory_iterator end(const recursive_directory_iterator&)
 #endif  // GHC_EXPAND_IMPL
 
 }  // namespace filesystem
-}  // namespace ghc
+}  // namespace alkaid
 
 // cleanup some macros
 #undef GHC_INLINE

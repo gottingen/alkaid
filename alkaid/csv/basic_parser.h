@@ -31,7 +31,7 @@
 #include <thread>
 #include <vector>
 
-#include <alkaid/files/mmap.h>
+#include <alkaid/files/local/mmap.h>
 #include <alkaid/csv/col_names.h>
 #include <alkaid/csv/format.h>
 #include <alkaid/csv/row.h>

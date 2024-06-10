@@ -30,7 +30,7 @@
 #include <vector>
 #include <alkaid/csv/data_type.h>
 #include <alkaid/csv/col_names.h>
-#include <alkaid/files/mmap.h>
+#include <alkaid/files/local/mmap.h>
 
 namespace alkaid {
     namespace internals {

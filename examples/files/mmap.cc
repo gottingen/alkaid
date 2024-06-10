@@ -16,7 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-#include <alkaid/files/mmap.h>
+#include <alkaid/files/local/mmap.h>
 #include <system_error> // for std::error_code
 #include <cstdio> // for std::printf
 #include <cassert>

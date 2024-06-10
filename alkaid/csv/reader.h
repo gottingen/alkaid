@@ -31,7 +31,7 @@
 #include <string>
 #include <vector>
 
-#include <alkaid/files/mmap.h>
+#include <alkaid/files/local/mmap.h>
 #include <alkaid/csv/basic_parser.h>
 #include <alkaid/csv/data_type.h>
 #include <alkaid/csv/format.h>

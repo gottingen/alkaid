@@ -16,5 +16,63 @@ find_package(turbo REQUIRED)
 set(ALKAID_DEPS_LIBRARIES turbo::turbo)
 get_target_property(ALKAID_STATIC_LIB alkaid::alkaid_static LOCATION)
 get_target_property(TURBO_STATIC_LIB turbo::turbo_static LOCATION)
-set(ALKAID_LIBRARIES ${ALKAID_STATIC_LIB} ${TURBO_STATIC_LIB})
-set(ALKAID_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/include ${turbo_INCLUDE_DIR})
+
+set(ALKAID_COMPRESS_LIBRARIES)
+set(ALKAID_COMPRESS_INCLUDE_DIRS)
+################################################
+# find zlib
+find_library(ZLIB_LIBRARY NAMES z libz.a HINTS ${EA_LIB})
+find_path(ZLIB_INCLUDE_DIR zlib.h HINTS ${EA_INCLUDE})
+if(ZLIB_LIBRARY AND ZLIB_INCLUDE_DIR)
+    set(ENABLE_ZLIB TRUE)
+    list(APPEND ALKAID_COMPRESS_LIBRARIES ${ZLIB_LIBRARY})
+    list(APPEND ALKAID_COMPRESS_INCLUDE_DIRS ${ZLIB_INCLUDE_DIR})
+endif()
+# at least one compression library is required
+if(NOT ENABLE_ZLIB)
+    message(FATAL_ERROR "zlib not found")
+endif()
+
+################################################
+# find lz4
+find_library(LZ4_LIBRARY NAMES lz4 liblz4.a HINTS ${EA_LIB})
+find_path(LZ4_INCLUDE_DIR lz4.h HINTS ${EA_INCLUDE})
+if(LZ4_LIBRARY AND LZ4_INCLUDE_DIR)
+    set(ENABLE_LZ4 TRUE)
+    list(APPEND ALKAID_COMPRESS_LIBRARIES ${LZ4_LIBRARY})
+    list(APPEND ALKAID_COMPRESS_INCLUDE_DIRS ${LZ4_INCLUDE_DIR})
+endif()
+
+################################################
+# find snappy
+find_library(SNAPPY_LIBRARY NAMES snappy libsnappy.a HINTS ${EA_LIB})
+find_path(SNAPPY_INCLUDE_DIR snappy.h HINTS ${EA_INCLUDE})
+if(SNAPPY_LIBRARY AND SNAPPY_INCLUDE_DIR)
+    set(ENABLE_SNAPPY TRUE)
+    list(APPEND ALKAID_COMPRESS_LIBRARIES ${SNAPPY_LIBRARY})
+endif()
+
+################################################
+# find zstd
+find_library(ZSTD_LIBRARY NAMES zstd libzstd.a HINTS ${EA_LIB})
+find_path(ZSTD_INCLUDE_DIR zstd.h HINTS ${EA_INCLUDE})
+if(ZSTD_LIBRARY AND ZSTD_INCLUDE_DIR)
+    set(ENABLE_ZSTD TRUE)
+    list(APPEND ALKAID_COMPRESS_LIBRARIES ${ZSTD_LIBRARY})
+    list(APPEND ALKAID_COMPRESS_INCLUDE_DIRS ${ZSTD_INCLUDE_DIR})
+endif()
+
+################################################
+# find bzip2
+find_library(BZIP2_LIBRARY NAMES bz2 libbz2.a HINTS ${EA_LIB})
+find_path(BZIP2_INCLUDE_DIR bzlib.h HINTS ${EA_INCLUDE})
+if(BZIP2_LIBRARY AND BZIP2_INCLUDE_DIR)
+    set(ENABLE_BZIP2 TRUE)
+    list(APPEND ALKAID_COMPRESS_LIBRARIES ${BZIP2_LIBRARY})
+    list(APPEND ALKAID_COMPRESS_INCLUDE_DIRS ${BZIP2_INCLUDE_DIR})
+endif()
+
+set(ALKAID_LIBRARIES ${ALKAID_STATIC_LIB} ${TURBO_STATIC_LIB} ${ALKAID_COMPRESS_LIBRARIES})
+set(ALKAID_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/include ${turbo_INCLUDE_DIR} ${ALKAID_COMPRESS_INCLUDE_DIRS})
+list(REMOVE_DUPLICATES ALKAID_INCLUDE_DIRS)
+list(REMOVE_DUPLICATES ALKAID_LIBRARIES)
