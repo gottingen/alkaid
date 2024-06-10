@@ -28,6 +28,8 @@ set(ALKAID_SRC
         files/local/sequential_read_mmap_file.cc
         files/local/random_read_mmap_file.cc
         files/localfs.cc
+        files/buffered_reader.cc
+        files/buffered_writer.cc
         compress/compression.cc
         compress/compression_zlib.cc
         compress/compression_lz4.cc
