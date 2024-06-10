@@ -20,7 +20,7 @@
 //
 
 #include <alkaid/files/interface.h>
-#include <alkaid/files/filesystem_fwd.h>
+#include <alkaid/files/internal/filesystem_fwd.h>
 #include <alkaid/files/local/defines.h>
 
 namespace alkaid {

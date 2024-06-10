@@ -68,9 +68,9 @@
     #include "filesystem.hpp"
     namespace fs {
         using namespace ghc::filesystem;
-        using ifstream = ghc::filesystem::ifstream;
-        using ofstream = ghc::filesystem::ofstream;
-        using fstream = ghc::filesystem::fstream;
+        using ifstream = alkaid::filesystem::ifstream;
+        using ofstream = alkaid::filesystem::ofstream;
+        using fstream = alkaid::filesystem::fstream;
     }
 #endif
 

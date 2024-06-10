@@ -20,7 +20,7 @@
 //
 #include <alkaid/files/local/sequential_write_file.h>
 #include <alkaid/files/local/defines.h>
-#include <alkaid/ghc/filesystem.hpp>
+#include <alkaid/files/ghc/filesystem.hpp>
 #include <alkaid/files/local/sys_io.h>
 
 namespace alkaid::lfs {
@@ -45,15 +45,15 @@ namespace alkaid::lfs {
         for (int tries = 0; tries < open_option_.open_tries; ++tries) {
             // create containing folder if not exists already.
             if (open_option_.create_dir_if_miss) {
-                auto fpath = ghc::filesystem::path(path_);
+                auto fpath = alkaid::filesystem::path(path_);
                 auto pdir = fpath.parent_path();
                 if (!pdir.empty()) {
                     std::error_code ec;
-                    if (!ghc::filesystem::exists(pdir, ec)) {
+                    if (!alkaid::filesystem::exists(pdir, ec)) {
                         if (ec) {
                             continue;
                         }
-                        if (!ghc::filesystem::create_directories(pdir, ec)) {
+                        if (!alkaid::filesystem::create_directories(pdir, ec)) {
                             continue;
                         }
                     }

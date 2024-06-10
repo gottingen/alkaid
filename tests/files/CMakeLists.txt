@@ -25,4 +25,5 @@ carbin_cc_test(
         alkaid::alkaid
         GTest::gtest
         GTest::gtest_main
+        ${CARBIN_DEPS_LINK}
 )

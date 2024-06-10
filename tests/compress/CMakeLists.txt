@@ -16,6 +16,14 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-find_package(GTest REQUIRED)
-add_subdirectory(files)
-add_subdirectory(compress)
+carbin_cc_test(
+        NAME compression_test
+        SOURCES compression_test.cc
+        MODULE compress
+        CXXOPTS ${CARBIN_CXX_OPTIONS}
+        LINKS
+        alkaid::alkaid
+        GTest::gtest
+        GTest::gtest_main
+        ${CARBIN_DEPS_LINK}
+)

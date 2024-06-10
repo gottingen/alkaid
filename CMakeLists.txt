@@ -32,17 +32,17 @@ message(STATUS ${PROJECT_NAME}_IS_TOP_PROJECT)
 set(PROJECT_DESCRIPTION "alkaid is a c++ library for filesystem and high performance io")
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 1)
-set(PROJECT_VERSION_PATCH 6)
+set(PROJECT_VERSION_PATCH 7)
 set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
 set(${PROJECT_NAME}_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(${PROJECT_NAME}_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set(${PROJECT_NAME}_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(${PROJECT_NAME}_VERSION ${PROJECT_VERSION})
+string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UP)
 
-
-set(CARBIN_VERSION 0.5.0)
-set(CARBIN_CMAKE_VERSION 0.5.0)
+set(CARBIN_VERSION 0.6.0)
+set(CARBIN_CMAKE_VERSION 0.6.0)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/carbin_cmake)
 ##################################################################
 # add this for ${PROJECT_NAME} 's cmake include
@@ -72,6 +72,8 @@ include(alkaid_cxx_config)
 include(alkaid_test)
 
 configure_file(${PROJECT_SOURCE_DIR}/conda/meta.yaml.in ${PROJECT_SOURCE_DIR}/conda/meta.yaml @ONLY)
+string(TOUPPER ${CMAKE_BUILD_TYPE} UPPERCASE_BUILD_TYPE)
+configure_file(${PROJECT_SOURCE_DIR}/alkaid/version.h.in ${PROJECT_SOURCE_DIR}/alkaid/version.h @ONLY)
 
 add_subdirectory(alkaid)
 ####################################################################
@@ -167,3 +169,6 @@ configure_file(${PROJECT_SOURCE_DIR}/carbin_cmake/package/pkg_dump_template.pc.i
 
 install(FILES ${PROJECT_BINARY_DIR}/package/${PROJECT_NAME}.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 include(alkaid_cpack_config)
+carbin_print("alkaid cmake build system is created by carbin package manager tools")
+carbin_print("carbin: https://github.com/gottingen/carbin")
+carbin_print("template: https://github.com/gottingen/carbin-template@master")

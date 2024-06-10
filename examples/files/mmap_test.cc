@@ -16,7 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-#include <alkaid/files/mmap.h>
+#include <alkaid/files/local/mmap.h>
 #include <alkaid/files/shared_mmap.h>
 
 #include <string>

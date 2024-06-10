@@ -29,6 +29,7 @@
 #include <turbo/strings/cord.h>
 #include <turbo/utility/status.h>
 #include <turbo/base/macros.h>
+#include <alkaid/files/ghc/filesystem.hpp>
 
 namespace alkaid {
 
