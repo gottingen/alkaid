@@ -20,7 +20,7 @@
 //
 #include <alkaid/files/local/temp_file.h>
 #include <alkaid/files/local/defines.h>
-#include <alkaid/files/ghc/filesystem.hpp>
+#include <alkaid/files/internal/filesystem.h>
 #include <alkaid/files/local/sys_io.h>
 #include <turbo/strings/substitute.h>
 #include <cstdio>
@@ -113,7 +113,7 @@ namespace alkaid::lfs {
             _fd = INVALID_FILE_HANDLER;
         }
         std::error_code ec;
-        alkaid::filesystem::remove(path_, ec);
+        alkaid::remove(path_, ec);
         return turbo::OkStatus();
     }
 

@@ -6,5 +6,5 @@ gottingen/carbin-recipes@ea
 #########################
 # testing tools googlegtest benchmark
 testing
-gottingen/turbo@v0.5.8 -DCARBIN_BUILD_TESTS=OFF -DCARBIN_BUILD_BENCHMARKS=OFF -DCARBIN_BUILD_EXAMPLES=OFF
+gottingen/turbo@v0.5.9 -DCARBIN_BUILD_TESTS=OFF -DCARBIN_BUILD_BENCHMARKS=OFF -DCARBIN_BUILD_EXAMPLES=OFF
 

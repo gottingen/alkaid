@@ -20,6 +20,6 @@
 //
 
 #include <alkaid/files/localfs.h>
-#include <alkaid/files/ghc/filesystem.hpp>
+#include <alkaid/files/internal/filesystem.h>
 
 

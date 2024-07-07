@@ -21,7 +21,7 @@
 #pragma once
 
 #include <turbo/utility/status.h>
-#include <alkaid/files/ghc/filesystem.hpp>
+#include <alkaid/files/internal/filesystem.h>
 
 namespace alkaid::lfs {
 

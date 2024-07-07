@@ -18,7 +18,7 @@
 //
 // Created by jeff on 24-6-9.
 //
-
+#pragma once
 #include <alkaid/files/interface.h>
 #include <alkaid/files/internal/filesystem_fwd.h>
 #include <alkaid/files/local/defines.h>

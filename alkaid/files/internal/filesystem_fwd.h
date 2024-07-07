@@ -29,23 +29,11 @@
 #include <turbo/strings/cord.h>
 #include <turbo/utility/status.h>
 #include <turbo/base/macros.h>
-#include <alkaid/files/ghc/filesystem.hpp>
+#include <alkaid/files/internal/filesystem.h>
 
 namespace alkaid {
 
     class LocalFilesystem;
-
-    enum class CopyOptions : uint16_t {
-        None = 0,
-        SkipExisting = 1,
-        OverwriteExisting = 2,
-        OverwriteExistingIfNewer = 4,
-        Recursive = 8,
-        CopySymlinks = 0x10,
-        SkipSymlinks = 0x20,
-        DirectoriesOnly = 0x40,
-        CreateSymlinks = 0x80,
-    };
 
     class TURBO_EXPORT Filesystem {
     public:
@@ -148,11 +136,11 @@ namespace alkaid {
 
         // only copy dir and files in the directory
         virtual turbo::Status copy_directory(const std::string_view &src_path, const std::string_view &dst_path) noexcept {
-            auto options = CopyOptions::None;
+            auto options = CopyOptions::none;
             return copy_directory(src_path, dst_path, options);
         }
         virtual turbo::Status copy_directories(const std::string_view &src_path, const std::string_view &dst_path) noexcept {
-            auto options = CopyOptions::Recursive;
+            auto options = CopyOptions::recursive;
             return copy_directory(src_path, dst_path, options);
         }
     };
