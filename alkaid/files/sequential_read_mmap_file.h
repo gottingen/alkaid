@@ -19,17 +19,16 @@
 // Created by jeff on 24-6-9.
 //
 
-
 #include <alkaid/files/interface.h>
-#include <alkaid/files/local/defines.h>
+#include <alkaid/files/defines.h>
+#include <alkaid/files/local/mmap.h>
 
-namespace alkaid::lfs {
-
-    class TempFile : public TempFileWriter {
+namespace alkaid {
+    class SequentialReadMMapFile : public SequentialFileReader {
     public:
-        TempFile() = default;
+        SequentialReadMMapFile() = default;
 
-        ~TempFile() override;
+        ~SequentialReadMMapFile() override;
 
         turbo::Status open(const std::string &path, std::any options, FileEventListener listener) noexcept override;
 
@@ -40,25 +39,29 @@ namespace alkaid::lfs {
         turbo::Result<int64_t> tell() const noexcept override;
 
         FileMode mode() const noexcept override {
-            return FileMode::WRITE;
+            return FileMode::READ;
         }
 
         const std::string &path() const noexcept override {
             return path_;
         }
 
+        turbo::Status advance(off_t n) noexcept override;
+
         turbo::Result<size_t> size() const noexcept override;
 
-        turbo::Status truncate(size_t size) noexcept override;
-
     private:
-        turbo::Status append_impl(const void *buff, size_t len) noexcept override;
+        turbo::Result<size_t> read_impl(void *buff, size_t len) noexcept override;
 
         turbo::Status close_impl() noexcept;
-        std::string generate_temp_file_name(std::string_view prefix, std::string_view ext, size_t bits);
-    private:
-        FILE_HANDLER _fd{INVALID_FILE_HANDLER};
-        std::string path_;
-    };
 
-}  // namespace alkaid::lfs
+
+    private:
+        alkaid::ummap_source mmap_source_;
+        size_t pos_{0};
+        std::string path_;
+        OpenOption open_option_{kDefaultReadOption};
+        FileEventListener listener_;
+    };
+}  // namespace alkaid
+

@@ -20,17 +20,17 @@
 //
 
 #include <alkaid/files/interface.h>
-#include <alkaid/files/local/defines.h>
-#include <alkaid/files/local/random_read_mmap_file.h>
+#include <alkaid/files/defines.h>
+#include <alkaid/files/random_read_file.h>
 #include <alkaid/files/local/sys_io.h>
 
-namespace alkaid::lfs {
-    RandomReadMMapFile::~RandomReadMMapFile() {
+namespace alkaid {
+    RandomReadFile::~RandomReadFile() {
         auto r = close_impl();
         (void)r;
     }
 
-    turbo::Status RandomReadMMapFile::open(const std::string &filename, std::any options, FileEventListener listener) noexcept {
+    turbo::Status RandomReadFile::open(const std::string &filename, std::any options, FileEventListener listener) noexcept {
         auto r = close_impl();
         (void)r;
         if(options.has_value()) {
@@ -48,10 +48,11 @@ namespace alkaid::lfs {
         if (listener_.before_open) {
             listener_.before_open(this);
         }
-        std::error_code ec;
+
         for (int tries = 0; tries < open_option_.open_tries; ++tries) {
-            mmap_source_.map(path_, ec);
-            if (!ec) {
+            auto rs = lfs::open_file(path_, open_option_);
+            if (rs.ok()) {
+                _fd = rs.value();
                 if (listener_.after_open) {
                     listener_.after_open(this);
                 }
@@ -64,45 +65,49 @@ namespace alkaid::lfs {
         return turbo::unavailable_error("open file failed");
     }
 
-    turbo::Status RandomReadMMapFile::close() noexcept {
+    turbo::Status RandomReadFile::close() noexcept {
         return close_impl();
     }
 
-    turbo::Result<int64_t> RandomReadMMapFile::tell() const noexcept {
-        return 0;
-    }
-
-    turbo::Result<size_t> RandomReadMMapFile::size() const noexcept {
-        if(mmap_source_.is_open()) {
-            return mmap_source_.size();
+    turbo::Result<int64_t> RandomReadFile::tell() const noexcept {
+        if (_fd == INVALID_FILE_HANDLER) {
+            return turbo::invalid_argument_error("file not open");
         }
-        return turbo::unavailable_error("file not open");
+        return ::lseek(_fd, 0, SEEK_CUR);
     }
 
-    turbo::Result<size_t> RandomReadMMapFile::read_at_impl(int64_t offset, void *buff, size_t len) noexcept {
-           if(!mmap_source_.is_open()) {
-                return turbo::unavailable_error("file not open");
-            }
-            if(offset < 0 || offset >= mmap_source_.size()) {
-                return turbo::invalid_argument_error("offset out of range");
-            }
-            if(len == 0) {
-                return 0;
-            }
-            if(offset + len > mmap_source_.size()) {
-                len = mmap_source_.size() - offset;
-            }
-            std::memcpy(buff, mmap_source_.data() + offset, len);
-            return len;
+    turbo::Result<size_t> RandomReadFile::size() const noexcept {
+        if (_fd == INVALID_FILE_HANDLER) {
+            return turbo::unavailable_error("file not opened");
+        }
+        auto r = lfs::file_size(_fd);
+        if (r < 0) {
+            return turbo::errno_to_status(errno, "get file size failed");
+        }
+        return r;
     }
 
-    turbo::Status RandomReadMMapFile::close_impl() noexcept {
-        if (mmap_source_.is_open()) {
+    turbo::Result<size_t> RandomReadFile::read_at_impl(int64_t offset, void *buff, size_t len) noexcept {
+        INVALID_FD_RETURN(_fd);
+        size_t has_read = 0;
+        /// _fd may > 0 with _fp valid
+        ssize_t read_size = lfs::sys_pread(_fd, buff, len, static_cast<off_t>(offset));
+        if(read_size < 0 ) {
+            return turbo::errno_to_status(errno, "Failed reading file  for reading");
+        }
+        // read_size > 0 means read the end of file
+        return has_read;
+    }
+
+    turbo::Status RandomReadFile::close_impl() noexcept {
+        if (_fd > 0) {
             if (listener_.before_close) {
                 listener_.before_close(this);
             }
 
-            mmap_source_.unmap();
+            ::close(_fd);
+            _fd = INVALID_FILE_HANDLER;
+
             if (listener_.after_close) {
                 listener_.after_close(this);
             }
@@ -110,4 +115,4 @@ namespace alkaid::lfs {
         return turbo::OkStatus();
     }
 
-}  // namespace alkaid::lfs
+}  // namespace alkaid

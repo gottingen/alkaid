@@ -20,143 +20,73 @@
 //
 
 #include <alkaid/files/localfs.h>
-#include <alkaid/files/local/sequential_read_file.h>
-#include <alkaid/files/local/sequential_read_mmap_file.h>
-#include <alkaid/files/local/sequential_write_file.h>
-#include <alkaid/files/local/random_read_file.h>
-#include <alkaid/files/local/random_read_mmap_file.h>
-#include <alkaid/files/local/random_write_file.h>
-#include <alkaid/files/local/temp_file.h>
+#include <alkaid/files/sequential_read_file.h>
+#include <alkaid/files/sequential_read_mmap_file.h>
+#include <alkaid/files/sequential_write_file.h>
+#include <alkaid/files/random_read_file.h>
+#include <alkaid/files/random_read_mmap_file.h>
+#include <alkaid/files/random_write_file.h>
+#include <alkaid/files/temp_file.h>
 #include <turbo/strings/substitute.h>
+#include <alkaid/files/utility.h>
 
 namespace alkaid {
 
     turbo::Result<std::shared_ptr<SequentialFileReader>> LocalFilesystem::create_sequential_read_file() {
-        auto file = std::make_shared<lfs::SequentialReadFile>();
+        auto file = std::make_shared<SequentialReadFile>();
         return file;
     }
 
     turbo::Result<std::shared_ptr<SequentialFileReader>> LocalFilesystem::create_sequential_read_mmap_file() {
-        auto file = std::make_shared<lfs::SequentialReadMMapFile>();
+        auto file = std::make_shared<SequentialReadMMapFile>();
         return file;
     }
 
     turbo::Result<std::shared_ptr<RandomAccessFileReader>> LocalFilesystem::create_random_read_file() {
-        auto file = std::make_shared<lfs::RandomReadFile>();
+        auto file = std::make_shared<RandomReadFile>();
         return file;
     }
 
     turbo::Result<std::shared_ptr<RandomAccessFileReader>> LocalFilesystem::create_random_read_mmap_file() {
-        auto file = std::make_shared<lfs::RandomReadMMapFile>();
+        auto file = std::make_shared<RandomReadMMapFile>();
         return file;
     }
 
     turbo::Result<std::shared_ptr<SequentialFileWriter>> LocalFilesystem::create_sequential_write_file() {
-        auto file = std::make_shared<lfs::SequentialWriteFile>();
+        auto file = std::make_shared<SequentialWriteFile>();
         return file;
     }
 
     turbo::Result<std::shared_ptr<RandomAccessFileWriter>> LocalFilesystem::create_random_write_file() {
-        auto file = std::make_shared<lfs::RandomWriteFile>();
+        auto file = std::make_shared<RandomWriteFile>();
         return file;
     }
 
     turbo::Result<std::shared_ptr<TempFileWriter>> LocalFilesystem::create_temp_file() {
-        auto file = std::make_shared<lfs::TempFile>();
+        auto file = std::make_shared<TempFile>();
         return file;
     }
 
     turbo::Status LocalFilesystem::read_file(const std::string &file_path, std::string *result) noexcept {
-        lfs::SequentialReadFile file;
-        auto rs = file.open(file_path, std::any{}, FileEventListener{});
-        if (!rs.ok()) {
-            return rs;
-        }
-        auto rsize = file.size();
-        if (!rsize.ok()) {
-            return rsize.status();
-        }
-        auto r = file.read(result, rsize.value());
-        if (!r.ok()) {
-            return r.status();
-        }
-        return turbo::OkStatus();
+        return alkaid::read_file(file_path, result);
     }
 
     turbo::Status LocalFilesystem::write_file(const std::string &file_path, const std::string_view &content) noexcept {
-        lfs::SequentialWriteFile file;
-        auto rs = file.open(file_path, lfs::kDefaultTruncateWriteOption, FileEventListener{});
-        if (!rs.ok()) {
-            return rs;
-        }
-
-        rs = file.append(content);
-        if (!rs.ok()) {
-            return rs;
-        }
-        return turbo::OkStatus();
+        return alkaid::write_file(file_path, content);
     }
 
     turbo::Status LocalFilesystem::append_file(const std::string &file_path, const std::string_view &content) noexcept {
-        lfs::SequentialWriteFile file;
-        auto rs = file.open(file_path, lfs::kDefaultAppendWriteOption, FileEventListener{});
-        if (!rs.ok()) {
-            return rs;
-        }
-
-        rs = file.append(content);
-        if (!rs.ok()) {
-            return rs;
-        }
-        return turbo::OkStatus();
+        return alkaid::append_file(file_path, content);
     }
 
     turbo::Status LocalFilesystem::list_files(const std::string_view &root_path, std::vector<std::string> &result,
                                               bool full_path) noexcept {
-        std::error_code ec;
-        alkaid::DirectoryIterator itr(root_path, ec);
-        if (ec) {
-            return turbo::errno_to_status(ec.value(), turbo::substitute("open directory error:$0", ec.message()));
-        }
-        alkaid::DirectoryIterator end;
-        for (; itr != end; ++itr) {
-            if (!itr->is_directory(ec)) {
-                if (ec) {
-                    return turbo::errno_to_status(ec.value(),
-                                                  turbo::substitute("test if file error: $0", ec.message()));
-                }
-                if (full_path) {
-                    result.emplace_back(itr->path().string());
-                } else {
-                    result.emplace_back(itr->path().filename());
-                }
-            }
-        }
-        return turbo::OkStatus();
+        return alkaid::list_files(root_path, result, full_path);
     }
 
     turbo::Status LocalFilesystem::list_directories(const std::string_view &root_path, std::vector<std::string> &result,
                                                     bool full_path) noexcept {
-        std::error_code ec;
-        alkaid::DirectoryIterator itr(root_path, ec);
-        if (ec) {
-            return turbo::errno_to_status(ec.value(), turbo::substitute("open directory error: $0", ec.message()));
-        }
-        alkaid::DirectoryIterator end;
-        for (; itr != end; ++itr) {
-            if (itr->is_directory(ec)) {
-                if (ec) {
-                    return turbo::errno_to_status(ec.value(),
-                                                  turbo::substitute("test if directory error:$0", ec.message()));
-                }
-                if (full_path) {
-                    result.emplace_back(itr->path().string());
-                } else {
-                    result.emplace_back(itr->path().filename());
-                }
-            }
-        }
-        return turbo::OkStatus();
+        return alkaid::list_directories(root_path, result, full_path);
     }
 
     LocalFilesystem *Filesystem::localfs() {

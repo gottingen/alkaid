@@ -23,7 +23,7 @@
 #include <turbo/utility/status.h>
 #include <alkaid/files/internal/filesystem.h>
 
-namespace alkaid::lfs {
+namespace alkaid {
 
 #if defined(__linux__)  || defined(__APPLE__)
     using FILE_HANDLER = int;
@@ -112,7 +112,7 @@ namespace alkaid::lfs {
     static constexpr OpenOption kDefaultTruncateWriteOption = OpenOption{1, 0, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC,
                                                                          0644, false};
 
-}  // namespace alkaid::lfs
+}  // namespace alkaid
 
 #define INVALID_FD_RETURN(fd) \
     if ((fd) == INVALID_FILE_HANDLER) \

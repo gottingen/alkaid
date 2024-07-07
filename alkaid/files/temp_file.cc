@@ -18,8 +18,8 @@
 //
 // Created by jeff on 24-6-9.
 //
-#include <alkaid/files/local/temp_file.h>
-#include <alkaid/files/local/defines.h>
+#include <alkaid/files/temp_file.h>
+#include <alkaid/files/defines.h>
 #include <alkaid/files/internal/filesystem.h>
 #include <alkaid/files/local/sys_io.h>
 #include <turbo/strings/substitute.h>
@@ -29,7 +29,7 @@
 #include <random>
 #include <mutex>
 
-namespace alkaid::lfs {
+namespace alkaid {
 
     static std::mt19937 temp_file_bit_gen(std::random_device{}());
     static std::mutex temp_file_spin_lock;
@@ -63,7 +63,7 @@ namespace alkaid::lfs {
             return r;
         }
         path_ = generate_temp_file_name(path, "tmp", 6);
-        auto rs = open_file(path, kDefaultTruncateWriteOption);
+        auto rs = lfs::open_file(path, kDefaultTruncateWriteOption);
         if (!rs.ok()) {
             return rs.status();
         }
@@ -86,7 +86,7 @@ namespace alkaid::lfs {
         if (_fd == INVALID_FILE_HANDLER) {
             return turbo::unavailable_error("file not opened");
         }
-        auto r = file_size(_fd);
+        auto r = lfs::file_size(_fd);
         if (r < 0) {
             return turbo::errno_to_status(errno, "get file size failed");
         }
@@ -97,7 +97,7 @@ namespace alkaid::lfs {
         if (_fd == INVALID_FILE_HANDLER) {
             return turbo::unavailable_error("file not opened");
         }
-        auto n = sys_write(_fd, buff, len);
+        auto n = lfs::sys_write(_fd, buff, len);
         if (n == -1) {
             return turbo::errno_to_status(errno, "Failed to write to file %s", path_);
         }
@@ -132,4 +132,4 @@ namespace alkaid::lfs {
         return turbo::OkStatus();
     }
 
-}  // namespace alkaid::lfs
+}  // namespace alkaid

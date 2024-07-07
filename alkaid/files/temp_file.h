@@ -18,40 +18,47 @@
 //
 // Created by jeff on 24-6-9.
 //
+
+
 #include <alkaid/files/interface.h>
-#include <alkaid/files/local/defines.h>
+#include <alkaid/files/defines.h>
 
-namespace alkaid::lfs {
+namespace alkaid {
 
-    class RandomReadFile : public RandomAccessFileReader {
+    class TempFile : public TempFileWriter {
     public:
-        RandomReadFile() = default;
+        TempFile() = default;
 
-        ~RandomReadFile() override;
+        ~TempFile() override;
 
-        turbo::Status open(const std::string &filename, std::any options, FileEventListener listener) noexcept override;
+        turbo::Status open(const std::string &path, std::any options, FileEventListener listener) noexcept override;
 
-        turbo::Status close() noexcept override;
+        turbo::Status close() noexcept override {
+            return close_impl();
+        }
 
         turbo::Result<int64_t> tell() const noexcept override;
 
-        FileMode mode() const noexcept override { return FileMode::READ; }
+        FileMode mode() const noexcept override {
+            return FileMode::WRITE;
+        }
 
-        const std::string &path() const noexcept override { return path_; }
-
+        const std::string &path() const noexcept override {
+            return path_;
+        }
 
         turbo::Result<size_t> size() const noexcept override;
 
+        turbo::Status truncate(size_t size) noexcept override;
+
     private:
-        turbo::Result<size_t> read_at_impl(int64_t offset, void *buff, size_t len) noexcept override;
+        turbo::Status append_impl(const void *buff, size_t len) noexcept override;
 
         turbo::Status close_impl() noexcept;
-
+        std::string generate_temp_file_name(std::string_view prefix, std::string_view ext, size_t bits);
     private:
         FILE_HANDLER _fd{INVALID_FILE_HANDLER};
         std::string path_;
-        OpenOption open_option_{kDefaultReadOption};
-        FileEventListener listener_;
-
     };
-}  // namespace alkaid::lfs
+
+}  // namespace alkaid

@@ -19,20 +19,18 @@
 // Created by jeff on 24-6-9.
 //
 
-#include <alkaid/files/interface.h>
-#include <alkaid/files/local/defines.h>
-#include <alkaid/files/local/random_read_file.h>
+#include <alkaid/files/sequential_read_file.h>
 #include <alkaid/files/local/sys_io.h>
 
-namespace alkaid::lfs {
-    RandomReadFile::~RandomReadFile() {
-        auto r = close_impl();
-        (void)r;
-    }
+namespace alkaid {
 
-    turbo::Status RandomReadFile::open(const std::string &filename, std::any options, FileEventListener listener) noexcept {
+    SequentialReadFile::~SequentialReadFile() {
         auto r = close_impl();
-        (void)r;
+        (void )r;
+    }
+    turbo::Status SequentialReadFile::open(const std::string &path, std::any options , FileEventListener listener) noexcept {
+        auto r = close_impl();
+        (void )r;
         if(options.has_value()) {
             try {
                 open_option_ = std::any_cast<OpenOption>(options);
@@ -41,7 +39,7 @@ namespace alkaid::lfs {
             }
         }
         listener_ = listener;
-        path_ = filename;
+        path_ = path;
         if(path_.empty()) {
             return turbo::invalid_argument_error("file path is empty");
         }
@@ -50,7 +48,7 @@ namespace alkaid::lfs {
         }
 
         for (int tries = 0; tries < open_option_.open_tries; ++tries) {
-            auto rs = open_file(path_, open_option_);
+            auto rs = lfs::open_file(path_, open_option_);
             if (rs.ok()) {
                 _fd = rs.value();
                 if (listener_.after_open) {
@@ -62,44 +60,10 @@ namespace alkaid::lfs {
                 turbo::sleep_for(turbo::Duration::milliseconds(open_option_.open_interval_ms));
             }
         }
-        return turbo::unavailable_error("open file failed");
+        return turbo::errno_to_status(errno, "open file failed");
     }
 
-    turbo::Status RandomReadFile::close() noexcept {
-        return close_impl();
-    }
-
-    turbo::Result<int64_t> RandomReadFile::tell() const noexcept {
-        if (_fd == INVALID_FILE_HANDLER) {
-            return turbo::invalid_argument_error("file not open");
-        }
-        return ::lseek(_fd, 0, SEEK_CUR);
-    }
-
-    turbo::Result<size_t> RandomReadFile::size() const noexcept {
-        if (_fd == INVALID_FILE_HANDLER) {
-            return turbo::unavailable_error("file not opened");
-        }
-        auto r = file_size(_fd);
-        if (r < 0) {
-            return turbo::errno_to_status(errno, "get file size failed");
-        }
-        return r;
-    }
-
-    turbo::Result<size_t> RandomReadFile::read_at_impl(int64_t offset, void *buff, size_t len) noexcept {
-        INVALID_FD_RETURN(_fd);
-        size_t has_read = 0;
-        /// _fd may > 0 with _fp valid
-        ssize_t read_size = sys_pread(_fd, buff, len, static_cast<off_t>(offset));
-        if(read_size < 0 ) {
-            return turbo::errno_to_status(errno, "Failed reading file  for reading");
-        }
-        // read_size > 0 means read the end of file
-        return has_read;
-    }
-
-    turbo::Status RandomReadFile::close_impl() noexcept {
+    turbo::Status SequentialReadFile::close_impl() noexcept {
         if (_fd > 0) {
             if (listener_.before_close) {
                 listener_.before_close(this);
@@ -115,4 +79,48 @@ namespace alkaid::lfs {
         return turbo::OkStatus();
     }
 
-}  // namespace alkaid::lfs
+    turbo::Result<int64_t> SequentialReadFile::tell() const noexcept {
+        if (_fd == INVALID_FILE_HANDLER) {
+            return turbo::invalid_argument_error("file not open");
+        }
+        return ::lseek(_fd, 0, SEEK_CUR);
+    }
+
+    turbo::Result<size_t> SequentialReadFile::size() const noexcept {
+        if (_fd == INVALID_FILE_HANDLER) {
+            return turbo::unavailable_error("file not opened");
+        }
+        auto r = lfs::file_size(_fd);
+        if (r < 0) {
+            return turbo::errno_to_status(errno, "get file size failed");
+        }
+        return r;
+    }
+
+    turbo::Status SequentialReadFile::advance(off_t n) noexcept {
+        if (_fd == INVALID_FILE_HANDLER) {
+            return turbo::invalid_argument_error("file not open");
+        }
+        auto r = ::lseek(_fd, n, SEEK_CUR);
+        if (r == -1) {
+            return turbo::errno_to_status(errno, "advance file failed");
+        }
+        return turbo::OkStatus();
+
+    }
+
+    turbo::Result<size_t> SequentialReadFile::read_impl(void *buff, size_t len) noexcept {
+        if (_fd == INVALID_FILE_HANDLER) {
+            return turbo::invalid_argument_error("file not open");
+        }
+        if (len == 0) {
+            return 0;
+        }
+        auto nread = lfs::sys_read(_fd, buff, len);
+        if (nread < 0) {
+            return turbo::errno_to_status(errno, "read file failed");
+        }
+        return nread;
+    }
+
+}  // namespace alkaid

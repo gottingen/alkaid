@@ -18,41 +18,48 @@
 //
 // Created by jeff on 24-6-9.
 //
+
 #include <alkaid/files/interface.h>
-#include <alkaid/files/local/defines.h>
-#include <alkaid/files/local/mmap.h>
+#include <alkaid/files/defines.h>
 
-namespace alkaid::lfs {
-
-    class RandomReadMMapFile : public RandomAccessFileReader {
+namespace alkaid {
+    class SequentialReadFile : public SequentialFileReader {
     public:
-        RandomReadMMapFile() = default;
+        SequentialReadFile() = default;
 
-        ~RandomReadMMapFile() override;
+        ~SequentialReadFile() override;
 
-        turbo::Status open(const std::string &filename, std::any options, FileEventListener listener) noexcept override;
+        turbo::Status open(const std::string &path, std::any options, FileEventListener listener) noexcept override;
 
-        turbo::Status close() noexcept override;
+        turbo::Status close() noexcept override {
+            return close_impl();
+        }
 
         turbo::Result<int64_t> tell() const noexcept override;
 
-        FileMode mode() const noexcept override { return FileMode::READ; }
+        FileMode mode() const noexcept override {
+            return FileMode::READ;
+        }
 
-        const std::string &path() const noexcept override { return path_; }
+        const std::string &path() const noexcept override {
+            return path_;
+        }
 
+        turbo::Status advance(off_t n) noexcept override;
 
         turbo::Result<size_t> size() const noexcept override;
 
     private:
-        turbo::Result<size_t> read_at_impl(int64_t offset, void *buff, size_t len) noexcept override;
+        turbo::Result<size_t> read_impl(void *buff, size_t len) noexcept override;
 
         turbo::Status close_impl() noexcept;
 
+
     private:
-        alkaid::ummap_source mmap_source_;
+        FILE_HANDLER _fd{INVALID_FILE_HANDLER};
         std::string path_;
         OpenOption open_option_{kDefaultReadOption};
         FileEventListener listener_;
-
     };
-}  // namespace alkaid::lfs
+}  // namespace alkaid
+

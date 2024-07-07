@@ -17,19 +17,9 @@
 # below are examples, after initialization, modify it to your own.
 ###########################################################################
 ###carbin_example
+file(GLOB_RECURSE FILES_SRC "files/*.cc")
 set(ALKAID_SRC
-        files/interface.cc
-        files/local/sys_io.cc
-        files/local/sequential_read_file.cc
-        files/local/sequential_write_file.cc
-        files/local/random_read_file.cc
-        files/local/random_write_file.cc
-        files/local/temp_file.cc
-        files/local/sequential_read_mmap_file.cc
-        files/local/random_read_mmap_file.cc
-        files/localfs.cc
-        files/buffered_reader.cc
-        files/buffered_writer.cc
+        ${FILES_SRC}
         compress/compression.cc
         compress/compression_zlib.cc
         compress/compression_lz4.cc

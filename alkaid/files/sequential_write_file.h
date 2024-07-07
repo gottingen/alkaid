@@ -20,9 +20,9 @@
 //
 
 #include <alkaid/files/interface.h>
-#include <alkaid/files/local/defines.h>
+#include <alkaid/files/defines.h>
 
-namespace alkaid::lfs {
+namespace alkaid {
 
     class SequentialWriteFile : public SequentialFileWriter {
     public:
@@ -62,4 +62,4 @@ namespace alkaid::lfs {
         OpenOption open_option_{kDefaultAppendWriteOption};
     };
 
-}  // namespace alkaid::lfs
+}  // namespace alkaid

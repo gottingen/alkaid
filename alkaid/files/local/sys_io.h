@@ -23,7 +23,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <alkaid/files/local/defines.h>
+#include <alkaid/files/defines.h>
 
 namespace alkaid::lfs {
 

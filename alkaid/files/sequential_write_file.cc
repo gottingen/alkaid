@@ -18,12 +18,12 @@
 //
 // Created by jeff on 24-6-9.
 //
-#include <alkaid/files/local/sequential_write_file.h>
-#include <alkaid/files/local/defines.h>
+#include <alkaid/files/sequential_write_file.h>
+#include <alkaid/files/defines.h>
 #include <alkaid/files/internal/filesystem.h>
 #include <alkaid/files/local/sys_io.h>
 
-namespace alkaid::lfs {
+namespace alkaid {
 
     SequentialWriteFile::~SequentialWriteFile() {
         auto r = close_impl();
@@ -59,7 +59,7 @@ namespace alkaid::lfs {
                     }
                 }
             }
-            auto rs = open_file(path_, open_option_);
+            auto rs = lfs::open_file(path_, open_option_);
             if (rs.ok()) {
                 _fd = rs.value();
                 if (listener_.after_open) {
@@ -89,7 +89,7 @@ namespace alkaid::lfs {
         if (_fd == INVALID_FILE_HANDLER) {
             return turbo::unavailable_error("file not opened");
         }
-        auto r = file_size(_fd);
+        auto r = lfs::file_size(_fd);
         if (r < 0) {
             return turbo::errno_to_status(errno, "get file size failed");
         }
@@ -100,7 +100,7 @@ namespace alkaid::lfs {
         if (_fd == INVALID_FILE_HANDLER) {
             return turbo::unavailable_error("file not opened");
         }
-        auto n = sys_write(_fd, buff, len);
+        auto n = lfs::sys_write(_fd, buff, len);
         if (n == -1) {
             return turbo::errno_to_status(errno, "Failed to write to file %s", path_);
         }
@@ -139,4 +139,4 @@ namespace alkaid::lfs {
         return turbo::OkStatus();
     }
 
-}  // namespace alkaid::lfs
+}  // namespace alkaid

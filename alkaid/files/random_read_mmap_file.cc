@@ -19,19 +19,20 @@
 // Created by jeff on 24-6-9.
 //
 
-#include <alkaid/files/local/sequential_read_mmap_file.h>
+#include <alkaid/files/interface.h>
+#include <alkaid/files/defines.h>
+#include <alkaid/files/random_read_mmap_file.h>
 #include <alkaid/files/local/sys_io.h>
 
-namespace alkaid::lfs {
-
-    SequentialReadMMapFile::~SequentialReadMMapFile() {
+namespace alkaid {
+    RandomReadMMapFile::~RandomReadMMapFile() {
         auto r = close_impl();
-        (void )r;
+        (void)r;
     }
-    turbo::Status SequentialReadMMapFile::open(const std::string &path, std::any options , FileEventListener listener) noexcept {
+
+    turbo::Status RandomReadMMapFile::open(const std::string &filename, std::any options, FileEventListener listener) noexcept {
         auto r = close_impl();
-        pos_ = 0;
-        (void )r;
+        (void)r;
         if(options.has_value()) {
             try {
                 open_option_ = std::any_cast<OpenOption>(options);
@@ -40,7 +41,7 @@ namespace alkaid::lfs {
             }
         }
         listener_ = listener;
-        path_ = path;
+        path_ = filename;
         if(path_.empty()) {
             return turbo::invalid_argument_error("file path is empty");
         }
@@ -60,10 +61,42 @@ namespace alkaid::lfs {
                 turbo::sleep_for(turbo::Duration::milliseconds(open_option_.open_interval_ms));
             }
         }
-        return turbo::errno_to_status(ec.value(), "open file failed");
+        return turbo::unavailable_error("open file failed");
     }
 
-    turbo::Status SequentialReadMMapFile::close_impl() noexcept {
+    turbo::Status RandomReadMMapFile::close() noexcept {
+        return close_impl();
+    }
+
+    turbo::Result<int64_t> RandomReadMMapFile::tell() const noexcept {
+        return 0;
+    }
+
+    turbo::Result<size_t> RandomReadMMapFile::size() const noexcept {
+        if(mmap_source_.is_open()) {
+            return mmap_source_.size();
+        }
+        return turbo::unavailable_error("file not open");
+    }
+
+    turbo::Result<size_t> RandomReadMMapFile::read_at_impl(int64_t offset, void *buff, size_t len) noexcept {
+           if(!mmap_source_.is_open()) {
+                return turbo::unavailable_error("file not open");
+            }
+            if(offset < 0 || offset >= mmap_source_.size()) {
+                return turbo::invalid_argument_error("offset out of range");
+            }
+            if(len == 0) {
+                return 0;
+            }
+            if(offset + len > mmap_source_.size()) {
+                len = mmap_source_.size() - offset;
+            }
+            std::memcpy(buff, mmap_source_.data() + offset, len);
+            return len;
+    }
+
+    turbo::Status RandomReadMMapFile::close_impl() noexcept {
         if (mmap_source_.is_open()) {
             if (listener_.before_close) {
                 listener_.before_close(this);
@@ -77,50 +110,4 @@ namespace alkaid::lfs {
         return turbo::OkStatus();
     }
 
-    turbo::Result<int64_t> SequentialReadMMapFile::tell() const noexcept {
-        return pos_;
-    }
-
-    turbo::Result<size_t> SequentialReadMMapFile::size() const noexcept {
-        if (!mmap_source_.is_open()) {
-            return turbo::invalid_argument_error("file not open");
-        }
-        return mmap_source_.size();
-    }
-
-    turbo::Status SequentialReadMMapFile::advance(off_t n) noexcept {
-        if (!mmap_source_.is_open()) {
-            return turbo::invalid_argument_error("file not open");
-        }
-        if (n < 0) {
-            return turbo::invalid_argument_error("n < 0");
-        }
-        if (n == 0) {
-            return turbo::OkStatus();
-        }
-        auto new_pos = pos_ + n;
-        if (new_pos > mmap_source_.size()) {
-            pos_ = mmap_source_.size();
-            return turbo::OkStatus();
-        }
-        pos_ = new_pos;
-        return turbo::OkStatus();
-    }
-
-    turbo::Result<size_t> SequentialReadMMapFile::read_impl(void *buff, size_t len) noexcept {
-        if (!mmap_source_.is_open()) {
-            return turbo::invalid_argument_error("file not open");
-        }
-        if (len == 0) {
-            return 0;
-        }
-        if (pos_ >= mmap_source_.size()) {
-            return 0;
-        }
-        auto nread = std::min(len, mmap_source_.size() - pos_);
-        std::memcpy(buff, mmap_source_.data() + pos_, nread);
-        pos_ += nread;
-        return nread;
-    }
-
-}  // namespace alkaid::lfs
+}  // namespace alkaid
