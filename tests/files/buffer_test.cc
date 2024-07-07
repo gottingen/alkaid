@@ -25,6 +25,8 @@
 
 
 TEST(BufferedTest, big_endian) {
+    if(alkaid::exists("test.txt").ok())
+        ASSERT_TRUE(alkaid::remove("test.txt").ok());
     auto file = std::make_shared<alkaid::SequentialWriteFile>();
     auto rs = file->open("test.txt", alkaid::kDefaultTruncateWriteOption, alkaid::FileEventListener{});
     ASSERT_TRUE(rs.ok());
