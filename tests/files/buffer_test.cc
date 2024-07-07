@@ -24,9 +24,7 @@
 #include <alkaid/files/sequential_write_file.h>
 
 
-TEST(BufferedTest, big_endian) {
-    if(alkaid::exists("test.txt").ok())
-        ASSERT_TRUE(alkaid::remove("test.txt").ok());
+TEST(BufferedTest, host_endian) {
     auto file = std::make_shared<alkaid::SequentialWriteFile>();
     auto rs = file->open("test.txt", alkaid::kDefaultTruncateWriteOption, alkaid::FileEventListener{});
     ASSERT_TRUE(rs.ok());
@@ -76,7 +74,7 @@ TEST(BufferedTest, big_endian) {
 }
 
 
-TEST(BufferedTest, little_endian) {
+TEST(BufferedTest, big_endian) {
     auto file = std::make_shared<alkaid::SequentialWriteFile>();
     auto rs = file->open("test1.txt", alkaid::kDefaultTruncateWriteOption, alkaid::FileEventListener{});
     ASSERT_TRUE(rs.ok());

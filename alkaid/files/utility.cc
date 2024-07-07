@@ -101,29 +101,49 @@ namespace alkaid {
         return itr.status();
     }
 
-    turbo::Status md5sum_file(const FilePath &file_path, std::string *result) noexcept {
+    turbo::Result<MD5Result> md5sum_file(const FilePath &file_path, size_t block_size) noexcept {
         std::string content;
-        STATUS_RETURN_IF_ERROR(read_file(file_path, &content));
+        content.reserve(block_size);
+        RESULT_ASSIGN_OR_RETURN(auto file_size, alkaid::file_size(file_path));
+        size_t read_size = 0;
+        SequentialReadFile file;
+        auto rs = file.open(file_path, std::any{}, FileEventListener{});
+        if (!rs.ok()) {
+            return rs;
+        }
         turbo::MD5 md5;
-        md5.update(content);
-        turbo::MD5::MD5Result md5_result = md5.final();
-        *result = md5_result.digest();
-        return turbo::OkStatus();
+        while (read_size < file_size) {
+            size_t read_block_size = std::min(block_size, file_size - read_size);
+            auto ss = file.read(&content, read_block_size);
+            if (!ss.ok()) {
+                return ss.status();
+            }
+            md5.update(content);
+            read_size += read_block_size;
+        }
+        return md5.final();
     }
 
-    turbo::Status md5sum_file(const FilePath &file_path, MD5Result *result) noexcept {
+    turbo::Result<uint32_t> crc32csum_file(const FilePath &file_path, size_t block_size) noexcept {
         std::string content;
-        STATUS_RETURN_IF_ERROR(read_file(file_path, &content));
-        turbo::MD5 md5;
-        md5.update(content);
-        md5.final(*result);
-        return turbo::OkStatus();
-    }
-
-    turbo::Result<uint32_t> crc32csum_file(const FilePath &file_path) noexcept {
-        std::string content;
-        STATUS_RETURN_IF_ERROR(read_file(file_path, &content));
-        turbo::CRC32C crc32c = turbo::compute_crc32c(content);
+        content.reserve(block_size);
+        RESULT_ASSIGN_OR_RETURN(auto file_size, alkaid::file_size(file_path));
+        size_t read_size = 0;
+        SequentialReadFile file;
+        auto rs = file.open(file_path, std::any{}, FileEventListener{});
+        if (!rs.ok()) {
+            return rs;
+        }
+        turbo::CRC32C crc32c(0);
+        while (read_size < file_size) {
+            size_t read_block_size = std::min(block_size, file_size - read_size);
+            auto ss = file.read(&content, read_block_size);
+            if (!ss.ok()) {
+                return ss.status();
+            }
+            crc32c = turbo::extend_crc32c(crc32c, content);
+            read_size += read_block_size;
+        }
         return (uint32_t)crc32c;
     }
 

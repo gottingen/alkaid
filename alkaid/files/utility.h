@@ -35,12 +35,10 @@ namespace alkaid {
 
     turbo::Status list_directories(const FilePath &root_path, std::vector<std::string> &result, bool full_path) noexcept;
 
-    turbo::Result<uint32_t> crc32csum_file(const FilePath &file_path) noexcept;
+    turbo::Result<uint32_t> crc32csum_file(const FilePath &file_path, size_t block_size = 4096) noexcept;
 
-    turbo::Status md5sum_file(const FilePath &file_path, std::string *result) noexcept;
     using MD5Result = turbo::MD5::MD5Result;
-
-    turbo::Status md5sum_file(const FilePath &file_path, MD5Result *result) noexcept;
+    turbo::Result<MD5Result> md5sum_file(const FilePath &file_path, size_t block_size = 4096) noexcept;
 
 
 }  // namespace alkaid
