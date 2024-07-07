@@ -22,11 +22,13 @@
 #include <alkaid/files/buffered_reader.h>
 #include <turbo/log/logging.h>
 namespace alkaid {
-    BufferedReader::BufferedReader(const std::shared_ptr<SequentialFileReader> &reader, size_t cache_size)
+    template<bool big_endian>
+    BufferedReader<big_endian>::BufferedReader(const std::shared_ptr<SequentialFileReader> &reader, size_t cache_size)
             : cache_size_(cache_size), reader_(reader) {
         CHECK(reader_) << "reader is nullptr";
     }
-    turbo::Result<size_t> BufferedReader::read(size_t size, turbo::Nonnull<turbo::Cord *> result) {
+    template<bool big_endian>
+    turbo::Result<size_t> BufferedReader<big_endian>::read(size_t size, turbo::Nonnull<turbo::Cord *> result) {
         if (!reach_end_) {
             auto rs = fill_buffer(size);
             if (!rs.ok()) {
@@ -49,7 +51,8 @@ namespace alkaid {
         return size;
     }
 
-    turbo::Result<size_t> BufferedReader::read(size_t size, turbo::Nonnull<std::string *> result) {
+    template<bool big_endian>
+    turbo::Result<size_t> BufferedReader<big_endian>::read(size_t size, turbo::Nonnull<std::string *> result) {
         if (!reach_end_) {
             auto rs = fill_buffer(size);
             if (!rs.ok()) {
@@ -79,7 +82,8 @@ namespace alkaid {
         return size;
     }
 
-    turbo::Result<size_t> BufferedReader::read(size_t size, turbo::Nonnull<uint8_t*> result) {
+    template<bool big_endian>
+    turbo::Result<size_t> BufferedReader<big_endian>::read(size_t size, turbo::Nonnull<uint8_t*> result) {
         if (!reach_end_) {
             auto rs = fill_buffer(size);
             if (!rs.ok()) {
@@ -104,15 +108,17 @@ namespace alkaid {
         cache_.remove_prefix(size);
         return size;
     }
-    void BufferedReader::set_cache_size(size_t size) {
+
+    template<bool big_endian>
+    void BufferedReader<big_endian>::set_cache_size(size_t size) {
         if(size < kDefaultCacheSize) {
             cache_size_ = kDefaultCacheSize;
         } else {
             cache_size_ = size;
         }
     }
-
-    turbo::Result<size_t> BufferedReader::fill_buffer(size_t size) {
+    template<bool big_endian>
+    turbo::Result<size_t> BufferedReader<big_endian>::fill_buffer(size_t size) {
         if (reach_end_) {
             return 0;
         }
@@ -129,4 +135,9 @@ namespace alkaid {
         }
         return rs.value();
     }
+
+
+    template class BufferedReader<true>;
+    template class BufferedReader<false>;
+
 }  // namespace alkaid

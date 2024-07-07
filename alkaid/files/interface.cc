@@ -20,7 +20,7 @@
 //
 
 #include <alkaid/files/interface.h>
-
+#include <turbo/log/logging.h>
 namespace alkaid {
 
     turbo::Result<size_t> SequentialFileReader::read(void *buff, size_t len) noexcept{
@@ -211,6 +211,7 @@ namespace alkaid {
                 }
             }
         }
+        flush();
         if(trunc) {
             auto trs = truncate(original_size + buffer.size());
             if(!trs.ok()) {

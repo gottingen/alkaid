@@ -24,15 +24,18 @@
 
 namespace alkaid {
 
-    BufferedWriter::BufferedWriter(const std::shared_ptr<SequentialFileWriter> &writer, size_t cache_size)
+    template<bool big_endian>
+    BufferedWriter<big_endian>::BufferedWriter(const std::shared_ptr<SequentialFileWriter> &writer, size_t cache_size)
             : cache_size_(cache_size), writer_(writer) {
         CHECK(writer_)<<"writer is nullptr";
     }
-    BufferedWriter::~BufferedWriter() {
+    template<bool big_endian>
+    BufferedWriter<big_endian>::~BufferedWriter() {
         CHECK(finalized_) << "BufferedWriter is destructed without calling finalize()";
     }
 
-    turbo::Status BufferedWriter::write(const turbo::Cord &cord) {
+    template<bool big_endian>
+    turbo::Status BufferedWriter<big_endian>::write(const turbo::Cord &cord) {
         CHECK(!finalized_)<<"BufferedWriter is finalized, you can not write any more data after finalize()";
         cache_.append(cord);
         if (cache_.size() >= cache_size_) {
@@ -41,7 +44,8 @@ namespace alkaid {
         return turbo::OkStatus();
     }
 
-    turbo::Status BufferedWriter::write(const std::string &str) {
+    template<bool big_endian>
+    turbo::Status BufferedWriter<big_endian>::write(const std::string &str) {
         CHECK(!finalized_)<<"BufferedWriter is finalized, you can not write any more data after finalize()";
         cache_.append(str);
         if (cache_.size() >= cache_size_) {
@@ -50,7 +54,8 @@ namespace alkaid {
         return turbo::OkStatus();
     }
 
-    turbo::Status BufferedWriter::write(const turbo::Nonnull<const uint8_t *> data, size_t size) {
+    template<bool big_endian>
+    turbo::Status BufferedWriter<big_endian>::write(const turbo::Nonnull<const uint8_t *> data, size_t size) {
         CHECK(!finalized_)<<"BufferedWriter is finalized, you can not write any more data after finalize()";
         cache_.append(std::string_view{reinterpret_cast<const char*>(data), size});
         if (cache_.size() >= cache_size_) {
@@ -59,7 +64,8 @@ namespace alkaid {
         return turbo::OkStatus();
     }
 
-    turbo::Status BufferedWriter::flush_impl() {
+    template<bool big_endian>
+    turbo::Status BufferedWriter<big_endian>::flush_impl() {
         CHECK(!finalized_)<<"BufferedWriter is finalized, you can not write any more data after finalize()";
         auto rs = writer_->append(cache_, true);
         if (!rs.ok()) {
@@ -69,14 +75,16 @@ namespace alkaid {
         return turbo::OkStatus();
     }
 
-    turbo::Status BufferedWriter::flush() {
+    template<bool big_endian>
+    turbo::Status BufferedWriter<big_endian>::flush() {
         if(cache_.empty()) {
             return turbo::OkStatus();
         }
         return flush_impl();
     }
 
-    turbo::Status BufferedWriter::finalize() {
+    template<bool big_endian>
+    turbo::Status BufferedWriter<big_endian>::finalize() {
         if(finalized_) {
             return turbo::OkStatus();
         }
@@ -91,5 +99,8 @@ namespace alkaid {
         finalized_ = true;
         return turbo::OkStatus();
     }
+
+    template class BufferedWriter<true>;
+    template class BufferedWriter<false>;
 
 }  // namespace alkaid

@@ -133,7 +133,7 @@ namespace alkaid {
                                           static_cast<off_t>(size));
         }
         if (::lseek(_fd, static_cast<off_t>(size), SEEK_SET) != 0) {
-            return turbo::errno_to_status(errno, "Failed seek file end %s for size:%ld ", path_,
+            return turbo::errno_to_status(errno, "Failed seek file end %s for size:%ld", path_,
                                           static_cast<off_t>(size));
         }
         return turbo::OkStatus();

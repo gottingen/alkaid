@@ -29,9 +29,13 @@
 
 namespace alkaid {
 
+    // using template to support big endian and little endian
+    // so we can using constexpr to optimize the code
+    template<bool big_endian = false>
     class BufferedWriter {
     public:
         static constexpr size_t kDefaultCacheSize = 1024 * 1024;
+        static constexpr bool is_big_endian = big_endian;
     public:
         // just take a copy of the writer, do not take the ownership
         BufferedWriter(const std::shared_ptr<SequentialFileWriter> &writer, size_t cache_size = kDefaultCacheSize);
@@ -44,35 +48,24 @@ namespace alkaid {
 
         turbo::Status write(const turbo::Nonnull<const uint8_t *> data, size_t size);
 
-        template<typename T>
-        turbo::Status write_type(const T &value);
-
         turbo::Status write_char(char value);
 
         turbo::Status write_uchar(unsigned char value);
 
-        template<bool big_endian = false>
         turbo::Status write_int16(int16_t value);
 
-        template<bool big_endian = false>
         turbo::Status write_uint16(uint16_t value);
 
-        template<bool big_endian = false>
         turbo::Status write_int32(int32_t value);
 
-        template<bool big_endian = false>
         turbo::Status write_uint32(uint32_t value);
 
-        template<bool big_endian = false>
         turbo::Status write_int64(int64_t value);
 
-        template<bool big_endian = false>
         turbo::Status write_uint64(uint64_t value);
 
-        template<bool big_endian = false>
         turbo::Status write_float(float value);
 
-        template<bool big_endian = false>
         turbo::Status write_double(double value);
 
         turbo::Status write_bool(bool value);
@@ -85,6 +78,8 @@ namespace alkaid {
 
     private:
         turbo::Status flush_impl();
+        template<typename T>
+        turbo::Status write_type(const T &value);
 
     private:
         size_t cache_size_;
@@ -93,76 +88,87 @@ namespace alkaid {
         bool finalized_{false};
     };
 
+    template<bool big_endian>
     template<typename T>
-    inline turbo::Status BufferedWriter::write_type(const T &value) {
+    inline turbo::Status BufferedWriter<big_endian>::write_type(const T &value) {
         return write(reinterpret_cast<const uint8_t *>(&value), sizeof(T));
     }
 
-    inline turbo::Status BufferedWriter::write_char(char value) {
-        return write_type(value);
-    }
-
-    inline turbo::Status BufferedWriter::write_uchar(unsigned char value) {
+    template<bool big_endian>
+    inline turbo::Status BufferedWriter<big_endian>::write_char(char value) {
         return write_type(value);
     }
 
     template<bool big_endian>
-    inline turbo::Status BufferedWriter::write_int16(int16_t value) {
+    inline turbo::Status BufferedWriter<big_endian>::write_uchar(unsigned char value) {
+        return write_type(value);
+    }
+
+    template<bool big_endian>
+    inline turbo::Status BufferedWriter<big_endian>::write_int16(int16_t value) {
         if constexpr (big_endian) {
             auto wvalue = turbo::ghtons(value);
             return write_type(wvalue);
+        } else {
+            return write_type(value);
         }
-        return write_type(value);
+
     }
 
     template<bool big_endian>
-    inline turbo::Status BufferedWriter::write_uint16(uint16_t value) {
+    inline turbo::Status BufferedWriter<big_endian>::write_uint16(uint16_t value) {
         if constexpr (big_endian) {
             auto wvalue = turbo::ghtons(value);
             return write_type(wvalue);
+        } else {
+            return write_type(value);
         }
-        return write_type(value);
+
     }
 
     template<bool big_endian>
-    inline turbo::Status BufferedWriter::write_int32(int32_t value) {
+    inline turbo::Status BufferedWriter<big_endian>::write_int32(int32_t value) {
         if constexpr (big_endian) {
             auto wvalue = turbo::ghtonl(value);
             return write_type(wvalue);
+        } else {
+            return write_type(value);
         }
-        return write_type(value);
 
     }
 
     template<bool big_endian>
-    inline turbo::Status BufferedWriter::write_uint32(uint32_t value) {
+    inline turbo::Status BufferedWriter<big_endian>::write_uint32(uint32_t value) {
         if constexpr (big_endian) {
             auto wvalue = turbo::ghtonl(value);
             return write_type(wvalue);
+        } else {
+            return write_type(value);
         }
-        return write_type(value);
     }
 
     template<bool big_endian>
-    inline turbo::Status BufferedWriter::write_int64(int64_t value) {
+    inline turbo::Status BufferedWriter<big_endian>::write_int64(int64_t value) {
         if constexpr (big_endian) {
             auto wvalue = turbo::ghtonll(value);
             return write_type(wvalue);
+        } else {
+            return write_type(value);
         }
-        return write_type(value);
     }
 
     template<bool big_endian>
-    inline turbo::Status BufferedWriter::write_uint64(uint64_t value) {
+    inline turbo::Status BufferedWriter<big_endian>::write_uint64(uint64_t value) {
         if constexpr (big_endian) {
             auto wvalue = turbo::ghtonll(value);
             return write_type(wvalue);
+        } else {
+            return write_type(value);
         }
-        return write_type(value);
     }
 
     template<bool big_endian>
-    inline turbo::Status BufferedWriter::write_float(float value) {
+    inline turbo::Status BufferedWriter<big_endian>::write_float(float value) {
         if constexpr (big_endian) {
             if constexpr (sizeof(float) == 4) {
                 auto wvalue = turbo::ghtonl(static_cast<uint32_t>(value));
@@ -173,12 +179,13 @@ namespace alkaid {
             } else {
                 return turbo::data_loss_error("unsupported float size");
             }
+        } else {
+            return write_type(value);
         }
-        return write_type(value);
     }
 
     template<bool big_endian>
-    inline turbo::Status BufferedWriter::write_double(double value) {
+    inline turbo::Status BufferedWriter<big_endian>::write_double(double value) {
         if constexpr (big_endian) {
             if constexpr (sizeof(double) == 4) {
                 auto wvalue = turbo::ghtonl(static_cast<uint32_t>(value));
@@ -189,11 +196,13 @@ namespace alkaid {
             } else {
                 return turbo::data_loss_error("unsupported double size");
             }
+        } else {
+            return write_type(value);
         }
-        return write_type(value);
     }
 
-    inline turbo::Status BufferedWriter::write_bool(bool value) {
+    template<bool big_endian>
+    inline turbo::Status BufferedWriter<big_endian>::write_bool(bool value) {
         return write_type(value);
     }
 }  // namespace alkaid

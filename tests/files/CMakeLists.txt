@@ -51,3 +51,15 @@ carbin_cc_test(
         GTest::gtest_main
         ${CARBIN_DEPS_LINK}
 )
+
+carbin_cc_test(
+        NAME buffer_test
+        SOURCES buffer_test.cc
+        MODULE files
+        CXXOPTS ${CARBIN_CXX_OPTIONS}
+        LINKS
+        alkaid::alkaid
+        GTest::gtest
+        GTest::gtest_main
+        ${CARBIN_DEPS_LINK}
+)

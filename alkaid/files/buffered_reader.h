@@ -28,9 +28,11 @@
 
 namespace alkaid {
 
+    template<bool big_endian = false>
     class BufferedReader {
     public:
         static constexpr size_t kDefaultCacheSize = 1024 * 1024;
+        static constexpr bool is_big_endian = big_endian;
     public:
         // just take a copy of the reader, do not take the ownership
         BufferedReader(const std::shared_ptr<SequentialFileReader> &reader, size_t cache_size = kDefaultCacheSize);
@@ -48,37 +50,24 @@ namespace alkaid {
             return reach_end_;
         }
 
-        // read integral or floating point type
-        // take attention to the endian
-        template<typename T>
-        turbo::Result<T> read_type();
-
         turbo::Result<char> read_char();
 
         turbo::Result<unsigned char> read_uchar();
 
-        template<bool big_endian = false>
         turbo::Result<int16_t> read_int16();
 
-        template<bool big_endian = false>
         turbo::Result<uint16_t> read_uint16();
 
-        template<bool big_endian = false>
         turbo::Result<int32_t> read_int32();
 
-        template<bool big_endian = false>
         turbo::Result<uint32_t> read_uint32();
 
-        template<bool big_endian = false>
         turbo::Result<int64_t> read_int64();
 
-        template<bool big_endian = false>
         turbo::Result<uint64_t> read_uint64();
 
-        template<bool big_endian = false>
         turbo::Result<float> read_float();
 
-        template<bool big_endian = false>
         turbo::Result<double> read_double();
 
         turbo::Result<bool> read_bool();
@@ -91,6 +80,11 @@ namespace alkaid {
 
     private:
         turbo::Result<size_t> fill_buffer(size_t size);
+        // read integral or floating point type
+        // take attention to the endian
+        template<typename T>
+        turbo::Result<T> read_type();
+
     private:
         bool reach_end_{false};
         size_t cache_size_;
@@ -98,8 +92,9 @@ namespace alkaid {
         std::shared_ptr<SequentialFileReader> reader_;
     };
 
+    template<bool big_endian>
     template<typename T>
-    inline turbo::Result<T> BufferedReader::read_type() {
+    inline turbo::Result<T> BufferedReader<big_endian>::read_type() {
         static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>, "T must be integral or floating point type");
         T c;
         auto ret = read(sizeof(T), reinterpret_cast<uint8_t*>(&c));
@@ -112,16 +107,18 @@ namespace alkaid {
         return ret.status();
     }
 
-    inline turbo::Result<char> BufferedReader::read_char() {
+    template<bool big_endian>
+    inline turbo::Result<char> BufferedReader<big_endian>::read_char() {
         return read_type<char>();
     }
 
-    inline turbo::Result<unsigned char> BufferedReader::read_uchar() {
+    template<bool big_endian>
+    inline turbo::Result<unsigned char> BufferedReader<big_endian>::read_uchar() {
         return read_type<unsigned char>();
     }
 
     template<bool big_endian>
-    inline turbo::Result<int16_t> BufferedReader::read_int16() {
+    inline turbo::Result<int16_t> BufferedReader<big_endian>::read_int16() {
         auto rs =read_type<int16_t>();
         if(!rs.ok()) {
             return rs;
@@ -133,7 +130,7 @@ namespace alkaid {
     }
 
     template<bool big_endian>
-    inline turbo::Result<uint16_t> BufferedReader::read_uint16() {
+    inline turbo::Result<uint16_t> BufferedReader<big_endian>::read_uint16() {
         auto rs =read_type<uint16_t>();
         if(!rs.ok()) {
             return rs;
@@ -145,7 +142,7 @@ namespace alkaid {
     }
 
     template<bool big_endian>
-    inline turbo::Result<int32_t> BufferedReader::read_int32() {
+    inline turbo::Result<int32_t> BufferedReader<big_endian>::read_int32() {
         auto rs =read_type<int32_t>();
         if(!rs.ok()) {
             return rs;
@@ -157,7 +154,7 @@ namespace alkaid {
     }
 
     template<bool big_endian>
-    inline turbo::Result<uint32_t> BufferedReader::read_uint32() {
+    inline turbo::Result<uint32_t> BufferedReader<big_endian>::read_uint32() {
         auto rs =read_type<uint32_t>();
         if(!rs.ok()) {
             return rs;
@@ -169,7 +166,7 @@ namespace alkaid {
     }
 
     template<bool big_endian>
-    inline turbo::Result<int64_t> BufferedReader::read_int64() {
+    inline turbo::Result<int64_t> BufferedReader<big_endian>::read_int64() {
         auto rs =read_type<int64_t>();
         if(!rs.ok()) {
             return rs;
@@ -181,7 +178,7 @@ namespace alkaid {
     }
 
     template<bool big_endian>
-    inline turbo::Result<uint64_t> BufferedReader::read_uint64() {
+    inline turbo::Result<uint64_t> BufferedReader<big_endian>::read_uint64() {
         auto rs =read_type<uint64_t>();
         if(!rs.ok()) {
             return rs;
@@ -193,7 +190,7 @@ namespace alkaid {
     }
 
     template<bool big_endian>
-    inline turbo::Result<float> BufferedReader::read_float() {
+    inline turbo::Result<float> BufferedReader<big_endian>::read_float() {
         auto rs =read_type<float>();
         if(!rs.ok()) {
             return rs;
@@ -211,7 +208,7 @@ namespace alkaid {
     }
 
     template<bool big_endian>
-    inline turbo::Result<double> BufferedReader::read_double() {
+    inline turbo::Result<double> BufferedReader<big_endian>::read_double() {
         auto rs =read_type<double>();
         if(!rs.ok()) {
             return rs;
@@ -228,7 +225,8 @@ namespace alkaid {
         return rs;
     }
 
-    inline turbo::Result<bool> BufferedReader::read_bool() {
+    template<bool big_endian>
+    inline turbo::Result<bool> BufferedReader<big_endian>::read_bool() {
         return read_type<bool>();
     }
 }  // namespace alkaid
