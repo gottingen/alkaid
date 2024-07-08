@@ -211,7 +211,7 @@ namespace alkaid {
                 }
             }
         }
-        flush();
+        STATUS_RETURN_IF_ERROR(flush());
         if(trunc) {
             auto trs = truncate(original_size + buffer.size());
             if(!trs.ok()) {

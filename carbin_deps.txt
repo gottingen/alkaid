@@ -8,3 +8,4 @@ gottingen/carbin-recipes@ea
 testing/googletest
 testing/benchmark
 ea/turbo
+inf/snappy
