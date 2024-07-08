@@ -5292,7 +5292,7 @@ return FilePath(std::wstring(buffer));
 
     inline turbo::Result<bool> DirectoryEntry::is_symlink() const noexcept {
         if (_symlink_status.type() != FileType::none) {
-            _symlink_status.type() == FileType::symlink;
+            return _symlink_status.type() == FileType::symlink;
         }
         RESULT_ASSIGN_OR_RETURN(auto s, symlink_status());
         return alkaid::is_symlink(s);
